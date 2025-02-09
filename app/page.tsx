@@ -2,6 +2,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Brain, Code, Zap, BarChart } from "lucide-react"
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -105,11 +106,11 @@ export default function Home() {
             <p className="text-xl mb-8 max-w-2xl mx-auto">
               Let's discuss how our custom AI development services can help you achieve your goals.
             </p>
-            <Link href="/contact">
-  <Button size="lg" variant="secondary">
-    Schedule a Consultation
-  </Button>
-</Link>
+            <Link href="/contact" passHref>
+              <Button size="lg" variant="secondary">
+                Schedule a Consultation
+              </Button>
+            </Link>
           </div>
         </section>
       </main>
