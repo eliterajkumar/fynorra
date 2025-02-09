@@ -10,7 +10,7 @@ export function Header() {
         </Link>
         <nav className="hidden md:flex space-x-8">
           <Link href="#features" className="text-gray-600 hover:text-primary">
-            Features
+            Models
           </Link>
           <Link href="#services" className="text-gray-600 hover:text-primary">
             Services
