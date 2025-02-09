@@ -19,12 +19,14 @@ export function Header() {
             Contact
           </Link>
         </nav>
-        <Button>Get Started</Button>
+        <div className="flex items-center space-x-4">
+          <Link href="/login" className="text-gray-600 hover:text-primary">
+            Login
+          </Link>
+          <Button>Get Started</Button>
       </div>
        <div className="flex items-center space-x-4">
         <a href="#" className="text-sm text-gray-800 hover:text-black">Login</a>
-        <button className="bg-gray-900 text-white text-sm px-4 py-2 rounded-md hover:bg-gray-700">
-          Start for free
         </button>
       </div>
     </header>
