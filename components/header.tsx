@@ -15,11 +15,16 @@ export function Header() {
           <Link href="#services" className="text-gray-600 hover:text-primary">
             Services
           </Link>
-          <Link href="#contact" className="text-gray-600 hover:text-primary">
+          <Link href="/contact" className="text-gray-600 hover:text-primary">
             Contact
           </Link>
+<<<<<<< HEAD
           <Link href="#contact" className="text-gray-600 hover:text-primary">
            The AI Codex 
+=======
+          <Link href="#The AI Codex" className="text-gray-600 hover:text-primary">
+            The AI Codex
+>>>>>>> 0bb4d0f (contact page updated)
           </Link>
         </nav>
         <div className="flex items-center space-x-4">
