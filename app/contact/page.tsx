@@ -52,8 +52,8 @@ export default function ContactPage() {
           <p className="text-sm mt-2">{status}</p>
         </form>
         <div className="mt-6 text-center">
-          <p className="text-gray-600">Email: contact@yourwebsite.com</p>
-          <p className="text-gray-600">Phone: +91 9352922959</p>
+          <p className="text-gray-600">Email: info@fynorra.com</p>
+          
           <div className="flex justify-center space-x-4 mt-4">
             <a href="#" className="text-blue-500 hover:underline">Twitter</a>
             <a href="https://tinyurl.com/yph7atbd" className="text-blue-500 hover:underline">LinkedIn</a>
