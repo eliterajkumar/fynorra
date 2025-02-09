@@ -105,9 +105,11 @@ export default function Home() {
             <p className="text-xl mb-8 max-w-2xl mx-auto">
               Let's discuss how our custom AI development services can help you achieve your goals.
             </p>
-            <Button size="lg" variant="secondary">
-              Schedule a Consultation
-            </Button>
+            <Link href="/contact">
+  <Button size="lg" variant="secondary">
+    Schedule a Consultation
+  </Button>
+</Link>
           </div>
         </section>
       </main>
