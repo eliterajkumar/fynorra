@@ -10,7 +10,7 @@ export function Header() {
         </Link>
         <nav className="hidden md:flex space-x-8">
           <Link href="#features" className="text-gray-600 hover:text-primary">
-            Models
+            Features
           </Link>
           <Link href="#services" className="text-gray-600 hover:text-primary">
             Services
@@ -24,10 +24,7 @@ export function Header() {
             Login
           </Link>
           <Button>Get Started</Button>
-      </div>
-       <div className="flex items-center space-x-4">
-        <a href="#" className="text-sm text-gray-800 hover:text-black">Login</a>
-        </button>
+        </div>
       </div>
     </header>
   );
