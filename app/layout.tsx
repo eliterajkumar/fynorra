@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Fynorra',
-  description: 'Created with v0',
+  description: 'Created with fynorra',
 }
 
 export default function RootLayout({

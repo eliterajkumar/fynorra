@@ -9,16 +9,16 @@ export function Header() {
           Fynorra
         </Link>
         <nav className="hidden md:flex space-x-8">
-          <Link href="#features" className="text-gray-600 hover:text-primary">
+          <Link href="/models" className="text-gray-600 hover:text-primary">
             Models
           </Link>
-          <Link href="#services" className="text-gray-600 hover:text-primary">
+          <Link href="/services" className="text-gray-600 hover:text-primary">
             Services
           </Link>
           <Link href="/contact" className="text-gray-600 hover:text-primary">
             Contact
           </Link>
-          <Link href="#ai-codex" className="text-gray-600 hover:text-primary">
+          <Link href="/the-ai-codex" className="text-gray-600 hover:text-primary">
             The AI Codex
           </Link>
         </nav>
