@@ -16,8 +16,8 @@ export default function Home() {
             <p className="text-xl mb-8 max-w-2xl mx-auto">
               Harness the power of artificial intelligence to drive innovation and growth in your organization.
             </p>
-            <Button size="lg" variant="secondary">
-              Start Your AI Journey
+            <Button size="lg" variant="secondary" asChild>
+               <Link href="/sign-up">Start Your AI Journey</Link>
             </Button>
           </div>
         </section>
