@@ -7,14 +7,15 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up", 
   "/models", 
   "/contact", 
-  "/the-ai-codex" // ✅ Added public routes
+  "/the-ai-codex", // ✅ Added public routes
   "/ai-consulting", // ✅ Added public routes
-  "ai-integration", // ✅ Added public routes
+  "/ai-integration", // ✅ Added public routes
   "/computer-vision", // ✅ Added public routes
-  "machine-learning", // ✅ Added public routes
-  "nlp", // ✅ Added public routes
-  "/predictive-analytics", // ✅ Added public routes
+  "/machine-learning", // ✅ Added public routes
+  "/nlp", // ✅ Added public routes
+  "/predictive-analytics" // ✅ Added public routes (No comma on last element)
 ]);
+
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
