@@ -14,7 +14,7 @@ const isPublicRoute = createRouteMatcher([
   "/services/computer-vision", // ✅ Added public routes
   "/services/machine-learning", // ✅ Added public routes
   "/services/nlp", // ✅ Added public routes
-  "/predictive-analytics" // ✅ Added public routes (No comma on last element)
+  "/services/predictive-analytics" // ✅ Added public routes (No comma on last element)
 ]);
 
 
