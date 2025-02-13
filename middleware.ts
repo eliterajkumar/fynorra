@@ -8,6 +8,7 @@ const isPublicRoute = createRouteMatcher([
   "/models", 
   "/contact", 
   "/the-ai-codex", // ✅ Added public routes
+  "/services",
   "/ai-consulting", // ✅ Added public routes
   "/ai-integration", // ✅ Added public routes
   "/computer-vision", // ✅ Added public routes
