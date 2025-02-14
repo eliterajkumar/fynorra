@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Sidebar from "@/components/sidebar";
 import { useUser, UserButton } from "@clerk/nextjs";
+import { Line } from "react-chartjs-2";
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 export default function AIDeploymentDashboard() {
   const { isLoaded, isSignedIn, user } = useUser();
@@ -24,68 +28,59 @@ export default function AIDeploymentDashboard() {
     return null; // Prevent rendering unauthorized content
   }
 
-  const services = [
-    {
-      title: "AI Model Fine-Tuning",
-      description: "Fine-tune AI models with your own data for better accuracy and customization.",
-      link: "#fine-tuning"
-    },
-    {
-      title: "Automated Model Training & Optimization",
-      description: "Let the platform automatically train and optimize AI models for you.",
-      link: "#training-optimization"
-    },
-    {
-      title: "No-Code/Low-Code AI App Deployment",
-      description: "Deploy AI-powered applications without writing complex code.",
-      link: "#no-code-deployment"
-    },
-    {
-      title: "Custom AI API Generation",
-      description: "Generate AI APIs that integrate with existing enterprise workflows.",
-      link: "#ai-api-generation"
-    },
-    {
-      title: "Live AI Chatbots & Assistants",
-      description: "Easily deploy AI chatbots for various industries and personal use.",
-      link: "#ai-chatbots"
-    }
-  ];
+  const chartData = {
+    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    datasets: [
+      {
+        label: "Model Accuracy",
+        data: [85, 88, 84, 90, 92, 95],
+        borderColor: "#3b82f6",
+        fill: false
+      }
+    ]
+  };
 
   return (
     <div className="flex h-screen">
       <Sidebar />
-      <div className="flex-1 p-8 bg-gray-100">
-        
-        {/* 🔹 User Info + Logout */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">AI Deployment Dashboard</h1>
-          
-          {/* User Details + Logout */}
-          <div className="flex items-center space-x-4">
-            <div className="text-right">
-              <p className="text-lg font-semibold">{user?.fullName}</p>
-              <p className="text-gray-600 text-sm">{user?.primaryEmailAddress?.emailAddress}</p>
+      <div className="flex-1 p-8 bg-gray-100 overflow-auto">
+        {/* Admin Dashboard Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+          {/* Overview Panel */}
+          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">Overview</h2>
+            <Line data={chartData} />
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+            <div className="flex flex-col space-y-4">
+              <Button variant="default">Upload Dataset</Button>
+              <Button variant="secondary">Train Model</Button>
+              <Button variant="outline">Deploy API</Button>
             </div>
-            <UserButton afterSignOutUrl="/" />
           </div>
         </div>
-
-        <p className="text-gray-600 mb-6">
-          Deploy and manage AI models and applications effortlessly.
-        </p>
-
-        {/* 🔹 AI Services List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map((service, index) => (
-            <div key={index} className="p-6 bg-white shadow-lg rounded-lg flex flex-col">
-              <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
-              <p className="text-gray-600 mb-4">{service.description}</p>
-              <a href={service.link} className="mt-auto text-blue-600 font-medium hover:underline">Learn More →</a>
-            </div>
-          ))}
+        
+        {/* Analytics & User Roles Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mt-6">
+          {/* Analytics */}
+          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">Analytics & Reports</h2>
+            <Line data={chartData} />
+          </div>
+          
+          {/* User Roles */}
+          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">User Roles</h2>
+            <ul className="list-disc pl-4">
+              <li>Admin</li>
+              <li>Developer</li>
+              <li>Business User</li>
+            </ul>
+          </div>
         </div>
-
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import Sidebar from "@/components/sidebar";
 
-export default function AutomationTools() {
+export default function AutomationWorkflowBuilder() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [selectedModel, setSelectedModel] = useState("GPT-4");
   const [apiType, setApiType] = useState("REST API");
@@ -25,8 +25,8 @@ export default function AutomationTools() {
     <div className="flex h-screen">
       <Sidebar />
       <div className="flex-1 p-8 bg-gray-100">
-        <h1 className="text-3xl font-bold mb-4">Automation Tools</h1>
-        <p className="text-gray-600 mb-6">Upload data, train models, generate APIs, and automate workflows.</p>
+        <h1 className="text-3xl font-bold mb-4">Automation Workflow Builder</h1>
+        <p className="text-gray-600 mb-6">Drag & Drop AI Pipelines, API Deployment, Task Scheduler.</p>
 
         {/* Data Upload Section */}
         <div className="p-6 bg-white shadow rounded-lg mb-6">

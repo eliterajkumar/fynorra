@@ -1,100 +1,82 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Sidebar from "@/components/sidebar";
-import { Upload } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
+import { motion } from "framer-motion";
+import { Avatar } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 
-export default function MultiModalAI() {
-  const [inputText, setInputText] = useState<string>("");
-  const [file, setFile] = useState<File | null>(null);
-  const [selectedModel, setSelectedModel] = useState<string>("GPT-4");
-  const [response, setResponse] = useState<string | null>(null); // Output Response State
+export default function ChatbotPage() {
+  const { isLoaded, isSignedIn } = useUser();
+  const router = useRouter();
+  const [messages, setMessages] = useState<{ user: boolean; text: string }[]>([]);
+  const [input, setInput] = useState("");
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFile(e.target.files[0]);
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push("/sign-in");
     }
-  };
+  }, [isLoaded, isSignedIn, router]);
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputText(e.target.value);
-  };
+  if (!isLoaded) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
 
-  const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedModel(e.target.value);
-  };
+  if (!isSignedIn) {
+    return null;
+  }
 
-  const processInput = () => {
-    // Fake processing response
-    setResponse(`Processed: ${inputText || file?.name || "No input"} with ${selectedModel}`);
+  const sendMessage = () => {
+    if (!input.trim()) return;
+    setMessages([...messages, { user: true, text: input }, { user: false, text: "Processing..." }]);
+    setInput("");
+    setTimeout(() => {
+      setMessages((msgs) => [...msgs.slice(0, -1), { user: false, text: "Hello! I'm your AI assistant." }]);
+    }, 1500);
   };
 
   return (
     <div className="flex h-screen">
       <Sidebar />
-      <div className="flex-1 p-8 bg-gray-100">
-        <h1 className="text-3xl font-bold mb-4">Explore MultiModal AI</h1>
-        <p className="text-gray-600 mb-6">Combine text, images, and audio for a powerful AI experience.</p>
-
-        {/* Features Section */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="p-4 bg-white shadow rounded-lg text-center">
-            <h3 className="font-semibold text-lg">📝 Text Understanding</h3>
-            <p className="text-sm text-gray-500">Generate & analyze text efficiently.</p>
-          </div>
-          <div className="p-4 bg-white shadow rounded-lg text-center">
-            <h3 className="font-semibold text-lg">🖼️ Image Processing</h3>
-            <p className="text-sm text-gray-500">Recognize and generate images.</p>
-          </div>
-          <div className="p-4 bg-white shadow rounded-lg text-center">
-            <h3 className="font-semibold text-lg">🎙️ Speech & Audio</h3>
-            <p className="text-sm text-gray-500">Transcribe & synthesize speech.</p>
-          </div>
-        </div>
-
-        {/* Upload & Try Section */}
-        <div className="p-6 bg-white shadow rounded-lg">
-          <h2 className="text-xl font-semibold mb-4">Try MultiModal AI</h2>
-          <div className="flex gap-4 mb-4">
-            <input
-              type="text"
-              placeholder="Enter text here..."
-              value={inputText}
-              onChange={handleTextChange}
-              className="flex-1 p-2 border rounded-md"
-            />
-            <label className="cursor-pointer flex items-center bg-gray-200 px-4 py-2 rounded-md">
-              <Upload size={20} className="mr-2" /> Upload File
-              <input type="file" className="hidden" onChange={handleFileUpload} />
-            </label>
-          </div>
-          {file && <p className="text-sm text-gray-600">Uploaded: {file.name}</p>}
-          
-          {/* Model Selection */}
-          <select
-            className="mt-4 p-2 border rounded-md w-full"
-            value={selectedModel}
-            onChange={handleModelChange}
-          >
-            <option>GPT-4</option>
-            <option>Mistral</option>
-            <option>Claude</option>
-            <option>Google Gemini</option>
-            <option>Custom Fine-Tuned Model</option>
-          </select>
-          
-          <Button className="mt-4 w-full" onClick={processInput}>
-            Process with {selectedModel}
-          </Button>
-
-          {/* Output Display Section */}
-          {response && (
-            <div className="mt-4 p-4 border rounded bg-gray-200">
-              <h3 className="text-lg font-semibold">Output:</h3>
-              <p>{response}</p>
+      <div className="flex-1 p-6 bg-gray-100 overflow-auto">
+        <h2 className="text-2xl font-semibold mb-4 text-center">Conversational AI & Chatbot</h2>
+        <div className="flex h-[400px] bg-white rounded-lg shadow-md overflow-hidden">
+          {/* Chat History Sidebar */}
+          <aside className="w-1/6 bg-gray-900 text-white p-4">
+            <h2 className="text-lg font-bold">Chat History</h2>
+            <Button className="mt-2 w-full">Chat #1</Button>
+            <Button className="mt-2 w-full">Chat #2</Button>
+          </aside>
+          {/* Chat Section */}
+          <div className="flex-1 flex flex-col bg-gray-100 p-4">
+            <header className="flex justify-between items-center border-b pb-2">
+              <h2 className="text-xl font-semibold">Chat AI</h2>
+              <Avatar className="w-10 h-10">
+                <img src="/ai-avatar.png" alt="AI Avatar" className="w-full h-full rounded-full" />
+              </Avatar>
+            </header>
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-2">
+              {messages.map((msg, index) => (
+                <motion.div 
+                  key={index} 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`p-2 my-2 rounded-lg ${msg.user ? "bg-blue-500 text-white self-end" : "bg-gray-200 text-black self-start"}`}
+                >
+                  {msg.text}
+                </motion.div>
+              ))}
             </div>
-          )}
+            {/* Input Field */}
+            <footer className="flex items-center gap-2 border-t pt-2">
+              <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type a message..." className="flex-1" />
+              <Button onClick={sendMessage} className="bg-blue-600">Send</Button>
+            </footer>
+          </div>
         </div>
       </div>
     </div>
