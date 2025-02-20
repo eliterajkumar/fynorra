@@ -1,25 +1,25 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
-export async function POST(req: { json: () => PromiseLike<{ name: any; email: any; message: any; }> | { name: any; email: any; message: any; }; }) {
+export async function POST(req: Request) {
   try {
     const { name, email, message } = await req.json();
 
-    // SMTP Transporter Setup
+    // ✅ Zoho SMTP Transporter Setup
     const transporter = nodemailer.createTransport({
-      host: "mail.fynorra.com", // Example: mail.yourdomain.com (For cPanel Webmail)
-      port: 465, // Use 465 for secure SSL, or 587 for TLS
-      secure: true, // true for SSL, false for TLS
+      host: "smtp.zoho.in", // India ke liye (Use smtp.zoho.com for Global)
+      port: 465, // Secure SSL port
+      secure: true, // true for SSL
       auth: {
-        user: process.env.SMTP_USER, // Your email
-        pass: process.env.SMTP_PASS,// Your Webmail password
+        user: process.env.ZOHO_USER, // Your Zoho email
+        pass: process.env.ZOHO_PASS, // Your Zoho App Password
       },
     });
 
-    // Email Options
+    // ✅ Email Options
     const mailOptions = {
-      from: `"${name}" <${email}>`,
-      to: "infor@fynorra.com", // Your business email (receiver)
+      from: `"${name}" <${process.env.ZOHO_USER}>`, // Zoho email se send karein
+      to: "info@fynorra.com", // Receiver email
       subject: "New Contact Form Submission",
       text: message,
       html: `<p><strong>Name:</strong> ${name}</p>
@@ -27,15 +27,11 @@ export async function POST(req: { json: () => PromiseLike<{ name: any; email: an
              <p><strong>Message:</strong> ${message}</p>`,
     };
 
-    // Send Email
+    // ✅ Send Email
     await transporter.sendMail(mailOptions);
 
     return NextResponse.json({ success: true, message: "Email sent successfully!" }, { status: 200 });
   } catch (error) {
-    if (error instanceof Error) {
-      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
-    } else {
-      // handle other types of errors
-    }
+    return NextResponse.json({ success: false, message: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
   }
-  }
+}
