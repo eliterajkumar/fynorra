@@ -7,34 +7,41 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up", 
   "/models", 
   "/contact", 
-  "/the-ai-codex", // ✅ Added public routes
-  
-  "/services/ai-consulting", // ✅ Added public routes
-  "/services/ai-integration", // ✅ Added public routes
-  "/services/computer-vision", // ✅ Added public routes
-  "/services/machine-learning", // ✅ Added public routes
-  "/services/nlp", // ✅ Added public routes
-  "/services/predictive-analytics" // ✅ Added public routes (No comma on last element)
+  "/the-ai-codex", 
+  "/services/ai-consulting",
+  "/services/ai-integration",
+  "/services/computer-vision",
+  "/services/machine-learning",
+  "/services/nlp",
+  "/services/predictive-analytics"
 ]);
-
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
   const currentURL = new URL(req.url);
 
-  // ✅ Redirect logged-in users away from auth pages (except home)
-  if (userId && isPublicRoute(req) && currentURL.pathname !== "/") {
+  // ✅ Allow static assets (CSS, images, etc.)
+  if (
+    currentURL.pathname.startsWith("/_next/") ||
+    currentURL.pathname.startsWith("/favicon.ico")
+  ) {
+    return NextResponse.next();
+  }
+
+  // ✅ Redirect logged-in users away from auth pages
+  if (userId && ["/sign-in", "/sign-up"].includes(currentURL.pathname)) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  // ✅ Allow public pages, block protected ones
+  // ✅ Allow public pages even after login
   if (!userId && !isPublicRoute(req)) {
-    return NextResponse.redirect(new URL("/", req.url)); // Redirect to home
+    return NextResponse.redirect(new URL("/", req.url));
   }
 
   return NextResponse.next();
 });
 
+// ✅ Fix CSS & Page loading issue
 export const config = {
   matcher: ["/((?!api|_next|.*\\..*).*)"], 
 };
