@@ -1,4 +1,4 @@
-
+"use client";
 import { Navbar } from "@/components/layout/navbar";
 import { HeroSection } from "@/components/sections/hero-section";
 import { ComingSoonSection } from "@/components/sections/coming-soon-section";
