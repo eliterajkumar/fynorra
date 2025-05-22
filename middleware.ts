@@ -1,29 +1,37 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const isPublicRoute = createRouteMatcher([
-  "/", 
-  "/sign-in", 
-  "/sign-up", 
-  "/models", 
-  "/contact", 
-  "/the-ai-codex", 
-  "/services/ai-consulting",
-  "/services/ai-integration",
-  "/services/computer-vision",
-  "/services/machine-learning",
-  "/services/nlp",
-  "/services/predictive-analytics"
-]);
+// ✅ Public routes (make sure all start with '/')
+const publicRoutes = [
+  "/",
+  "/about",
+  "/custom-ai-solutions",
+  "/ai-platform",
+  "/for-businesses",
+  "/contact",
+  "/login",
+  "/services",
+  "/privacy-policy",
+  "/terms-of-service",
+  "/learning",
+  "/cloud-devops", 
+  "/case-studies",
+  "/blog",
+  "/about-us",
+  "/software-development",
+  "/whitepapers",
+];
+
+const isPublicRoute = createRouteMatcher(publicRoutes);
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
   const currentURL = new URL(req.url);
 
-  // ✅ Allow static assets (CSS, images, etc.)
+  // ✅ Allow static files and Next.js internals
   if (
     currentURL.pathname.startsWith("/_next/") ||
-    currentURL.pathname.startsWith("/favicon.ico")
+    currentURL.pathname === "/favicon.ico"
   ) {
     return NextResponse.next();
   }
@@ -33,7 +41,7 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  // ✅ Allow public pages even after login
+  // ✅ Redirect unauthenticated users from protected routes
   if (!userId && !isPublicRoute(req)) {
     return NextResponse.redirect(new URL("/", req.url));
   }
@@ -41,7 +49,7 @@ export default clerkMiddleware(async (auth, req) => {
   return NextResponse.next();
 });
 
-// ✅ Fix CSS & Page loading issue
+// ✅ Middleware config: run on all routes except API and static files
 export const config = {
-  matcher: ["/((?!api|_next|.*\\..*).*)"], 
+  matcher: ["/((?!api|_next|.*\\..*).*)"],
 };
