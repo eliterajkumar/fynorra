@@ -1,5 +1,4 @@
-"use client";
-import React from "react";
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Rocket } from "lucide-react";
 

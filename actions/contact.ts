@@ -1,9 +1,6 @@
-// src/actions/contact.ts
 'use server';
 
 import { z } from 'zod';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const ContactFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -46,23 +43,28 @@ export async function contactAction(
   const { name, email, subject, message } = validatedFields.data;
 
   try {
-    await addDoc(collection(db, 'contactSubmissions'), {
-      name,
-      email,
-      subject,
-      message,
-      timestamp: serverTimestamp(),
+    // Agar aapke paas /api/contact endpoint hai to ye use karo:
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/contact`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, subject, message }),
     });
-    return { 
-      message: "Thank you for reaching out! We’ll get back to you soon.", 
-      success: true 
+
+    const result = await res.json();
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to send email.");
+    }
+
+    return {
+      message: "Thank you for reaching out! We’ll get back to you soon.",
+      success: true,
     };
   } catch (error) {
-    console.error("Error saving contact submission to Firestore:", error);
-    return { 
-      message: "An error occurred while submitting your message. Please try again later.", 
+    console.error("Error in contactAction:", error);
+    return {
+      message: "An error occurred while submitting your message. Please try again later.",
       errors: { general: "Submission failed." },
-      success: false 
+      success: false,
     };
   }
 }

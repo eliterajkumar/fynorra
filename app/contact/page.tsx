@@ -12,19 +12,19 @@ const contactDetails = [
   {
     icon: Mail,
     title: "Email Us",
-    value: "support@fynorra.com",
+    value: "info@fynorra.com",
     href: "mailto:support@fynorra.com",
   },
   {
     icon: Phone,
     title: "Call Us",
-    value: "+1 (555) 123-4567",
+    value: "+91 9352922959",
     href: "tel:+15551234567",
   },
   {
     icon: MapPin,
     title: "Our Office",
-    value: "123 Innovation Drive, Tech City, USA",
+    value: "Uttam Nagar, West Delhi, New Delhi, Delhi, India, 110059",
     href: "#", // No direct link for address typically
   },
 ];
