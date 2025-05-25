@@ -3,12 +3,12 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowRight, ShieldCheck, Zap, Eye, ListChecks, Settings2, Briefcase, Search, Settings, Rocket, ServerLock, KeyRound, UserCheck, CheckCircle } from "lucide-react";
+import { ArrowRight, ShieldCheck, Zap, Eye, ListChecks, Settings2, Briefcase, Search, Settings, Rocket, Shield, KeyRound, UserCheck, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 const features = [
   {
-    icon: <ServerLock className="h-8 w-8 text-primary mb-2" />,
+    icon: <Shield className="h-8 w-8 text-primary mb-2" />,
     title: "Cloud Security Posture Management (CSPM)",
     description: "Assess and improve the security of your cloud configurations and workloads against industry best practices.",
   },
