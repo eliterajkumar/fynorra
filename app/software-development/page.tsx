@@ -3,7 +3,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowRight, Code2, Laptop, Smartphone, Layers, FileSearch, Palette, Codepen, Rocket, Zap } from "lucide-react";
+import { ArrowRight, Code2, Laptop, Smartphone, Layers, FileSearch, Palette, Codepen, Rocket, Zap, Share2, Building, PenTool, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
@@ -13,6 +13,7 @@ const renderIcon = (name: string | undefined, props?: LucideProps) => {
   if (!name) return <HelpCircle {...props} />;
   const LucideIconComponent = lucideIcons[name as keyof typeof lucideIcons];
   if (!LucideIconComponent) {
+    console.warn(`Icon "${name}" not found in lucide-react. Falling back to HelpCircle.`);
     return <HelpCircle {...props} />;
   }
   return <LucideIconComponent {...props} />;
@@ -34,6 +35,7 @@ async function getSoftwareServices(): Promise<SoftwareService[]> {
     const servicesList = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SoftwareService));
     
     if (servicesList.length === 0) {
+        console.warn("No software services found in Firestore, using sample data.");
         return getSampleSoftwareServices();
     }
     return servicesList;
@@ -45,12 +47,48 @@ async function getSoftwareServices(): Promise<SoftwareService[]> {
 
 function getSampleSoftwareServices(): SoftwareService[] {
   return [
-    { id: '1', title: 'Web Application Development', description: 'Custom, scalable web applications built with modern technologies to meet your business objectives.', iconName: 'Laptop', link: '/software-development/web-apps' },
-    { id: '2', title: 'Mobile App Development', description: 'Engaging and high-performance iOS and Android mobile applications for a wide range of use cases.', iconName: 'Smartphone', link: '/software-development/mobile-apps' },
-    { id: '3', title: 'API Development & Integration', description: 'Robust and secure APIs to connect your systems, enable third-party integrations, and power new services.', iconName: 'Share2', link: '/software-development/api-integration' },
-    { id: '4', title: 'Enterprise Software Solutions', description: 'Complex software systems designed for large organizations to streamline operations and enhance productivity.', iconName: 'Building', link: '/software-development/enterprise-solutions' },
-    { id: '5', title: 'UI/UX Design', description: 'User-centric design services to create intuitive, accessible, and visually appealing digital experiences.', iconName: 'PenTool', link: '/software-development/ui-ux-design' },
-    { id: '6', title: 'Legacy System Modernization', description: 'Upgrade and transform your outdated systems into modern, efficient, and maintainable platforms.', iconName: 'RefreshCw', link: '/software-development/modernization' },
+    { 
+      id: '1', 
+      title: 'Web Application Development', 
+      description: 'Custom, scalable web applications built with modern technologies to meet your business objectives.', 
+      iconName: 'Laptop', 
+      link: '/software-development/web-apps' 
+    },
+    { 
+      id: '2', 
+      title: 'Mobile App Development', 
+      description: 'Engaging and high-performance iOS and Android mobile applications for a wide range of use cases.', 
+      iconName: 'Smartphone', 
+      link: '/software-development/mobile-apps' 
+    },
+    { 
+      id: '3', 
+      title: 'API Development & Integration', 
+      description: 'Robust and secure APIs to connect your systems, enable third-party integrations, and power new services.', 
+      iconName: 'Share2', 
+      link: '/software-development/api-integration' 
+    },
+    { 
+      id: '4', 
+      title: 'Enterprise Software Solutions', 
+      description: 'Complex software systems designed for large organizations to streamline operations and enhance productivity.', 
+      iconName: 'Building', 
+      link: '/software-development/enterprise-solutions' 
+    },
+    { 
+      id: '5', 
+      title: 'UI/UX Design', 
+      description: 'User-centric design services to create intuitive, accessible, and visually appealing digital experiences.', 
+      iconName: 'PenTool', 
+      link: '/software-development/ui-ux-design' 
+    },
+    { 
+      id: '6', 
+      title: 'Legacy System Modernization', 
+      description: 'Upgrade and transform your outdated systems into modern, efficient, and maintainable platforms.', 
+      iconName: 'RefreshCw', 
+      link: '/software-development/modernization' 
+    },
   ];
 }
 
@@ -84,7 +122,7 @@ export default async function SoftwareDevelopmentPage() {
           <h2 className="text-3xl font-bold mb-10 text-center sm:text-left">Our Software Development Services</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {services.map((service) => (
-              <Card key={service.id} className="bg-slate-800/50 border-slate-700/50 shadow-lg hover:shadow-primary/20 transition-shadow duration-300 flex flex-col">
+              <Card key={service.id} className="bg-slate-800/50 border-slate-700/50 shadow-lg hover:shadow-primary/20 transition-shadow duration-300 flex flex-col group">
                 <CardHeader className="items-center text-center">
                   <div className="p-3 bg-primary/10 rounded-full mb-3 transition-colors duration-300 group-hover:bg-primary/20">
                     {renderIcon(service.iconName, { className: "h-10 w-10 text-primary transition-transform duration-300 group-hover:scale-110" })}
@@ -96,8 +134,8 @@ export default async function SoftwareDevelopmentPage() {
                 </CardContent>
                 <div className="p-6 pt-2 mt-auto">
                   <Link href={service.link}>
-                    <Button variant="outline" className="w-full group text-sm border-primary/50 hover:bg-primary/10 hover:text-primary">
-                      Learn More <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    <Button variant="outline" className="w-full group/button text-sm border-primary/50 hover:bg-primary/10 hover:text-primary">
+                      Learn More <ArrowRight className="h-4 w-4 ml-2 group-hover/button:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
                 </div>
