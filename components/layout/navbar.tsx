@@ -52,7 +52,7 @@ export function Navbar() {
         <DropdownMenuContent align="start" className={cn(isMobile && "w-[calc(100vw-4rem)] ml-4 bg-slate-900 border-slate-700")}>
           <DropdownMenuItem asChild><Link href="/blog" className={cn(isMobile ? mobileNavLinkClass : "flex items-center gap-2 w-full text-slate-200 hover:!text-primary", "px-2 py-1.5")} onClick={() => isMobile && setMobileMenuOpen(false)}><BookOpen className={cn("h-4 w-4", isMobile && "h-5 w-5")} /> Blog</Link></DropdownMenuItem>
           <DropdownMenuItem asChild><Link href="/case-studies" className={cn(isMobile ? mobileNavLinkClass : "flex items-center gap-2 w-full text-slate-200 hover:!text-primary", "px-2 py-1.5")} onClick={() => isMobile && setMobileMenuOpen(false)}><Briefcase className={cn("h-4 w-4", isMobile && "h-5 w-5")} /> Case Studies</Link></DropdownMenuItem>
-          <DropdownMenuItem asChild><Link href="/whitepapers" className={cn(isMobile ? mobileNavLinkClass : "flex items-center gap-2 w-full text-slate-200 hover:!text-primary", "px-2 py-1.5")} onClick={() => isMobile && setMobileMenuOpen(false)}>Whitepapers</Link></DropdownMenuItem>
+         {/* <DropdownMenuItem asChild><Link href="/whitepapers" className={cn(isMobile ? mobileNavLinkClass : "flex items-center gap-2 w-full text-slate-200 hover:!text-primary", "px-2 py-1.5")} onClick={() => isMobile && setMobileMenuOpen(false)}>Whitepapers</Link></DropdownMenuItem> */}
         </DropdownMenuContent>
       </DropdownMenu>
 

@@ -1,3 +1,4 @@
+
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
@@ -15,19 +16,31 @@ interface CaseStudy {
   results: string[];
   client: string;
   imageUrl?: string;
-  slug?: string; // For linking to full case study
+  slug: string; // Changed from optional to required for linking
   dataAiHint?: string;
 }
 
 async function getCaseStudies(): Promise<CaseStudy[]> {
   try {
     const csCollection = collection(db, "caseStudies");
-    // Example: order by client name or a specific date field if available
     const q = query(csCollection, orderBy("client", "asc")); 
     const csSnapshot = await getDocs(q);
-    const csList = csSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CaseStudy));
+    const csList = csSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return { 
+            id: doc.id,
+            title: data.title || "Untitled Case Study",
+            overview: data.overview || "No overview available.",
+            results: data.results || [],
+            client: data.client || "Unknown Client",
+            imageUrl: data.imageUrl,
+            slug: data.slug || doc.id, // Fallback to ID if slug is missing
+            dataAiHint: data.dataAiHint,
+         } as CaseStudy;
+    });
     
     if (csList.length === 0) {
+      console.warn("No case studies found in Firestore, using sample data.");
       return getSampleCaseStudies();
     }
     return csList;
@@ -39,9 +52,9 @@ async function getCaseStudies(): Promise<CaseStudy[]> {
 
 function getSampleCaseStudies(): CaseStudy[] {
   return [
-    { id: '1', title: 'AI-Powered Automation Boosts Efficiency for FinTech Inc.', overview: 'FinTech Inc. leveraged Fynorra\'s custom AI solutions to automate 80% of their manual data entry tasks, leading to significant operational improvements.', results: ['80% reduction in manual data entry', '45% increase in processing speed', '20% decrease in operational costs'], client: 'FinTech Inc.', imageUrl: 'https://placehold.co/800x450.png', slug: 'fintech-ai-automation', dataAiHint: 'finance technology' },
-    { id: '2', title: 'E-commerce Giant Achieves 30% Sales Growth with Personalized Chatbots', overview: 'A leading e-commerce platform integrated Fynorra\'s AI chatbots, resulting in enhanced customer engagement and a substantial uplift in sales.', results: ['30% increase in online sales', '24/7 customer support availability', 'Improved customer satisfaction scores by 40%'], client: 'GlobalCart Marketplace', imageUrl: 'https://placehold.co/600x400.png', slug: 'ecommerce-chatbot-growth', dataAiHint: 'online shopping' },
-    { id: '3', title: 'Healthcare Provider Enhances Patient Care with Predictive Analytics', overview: 'Fynorra developed a predictive analytics model that helped a major healthcare provider anticipate patient needs and optimize resource allocation.', results: ['15% improvement in patient outcome predictions', 'Optimized staff scheduling', 'Reduced wait times by 25%'], client: 'HealthCare Solutions Group', imageUrl: 'https://placehold.co/600x400.png', slug: 'healthcare-predictive-analytics', dataAiHint: 'medical data' },
+    { id: '1', title: 'AI-Powered Automation Boosts Efficiency for FinTech Inc.', overview: 'FinTech Inc. leveraged Fynorra\'s custom AI solutions to automate 80% of their manual data entry tasks, leading to significant operational improvements.', results: ['80% reduction in manual data entry', '45% increase in processing speed', '20% decrease in operational costs'], client: 'FinTech Inc.', imageUrl: '/case1.png', slug: 'fintech-ai-automation', dataAiHint: 'finance technology' },
+    { id: '2', title: 'E-commerce Giant Achieves 30% Sales Growth with Personalized Chatbots', overview: 'A leading e-commerce platform integrated Fynorra\'s AI chatbots, resulting in enhanced customer engagement and a substantial uplift in sales.', results: ['30% increase in online sales', '24/7 customer support availability', 'Improved customer satisfaction scores by 40%'], client: 'GlobalCart Marketplace', imageUrl: '/ecom1.png', slug: 'ecommerce-chatbot-growth', dataAiHint: 'online shopping' },
+    { id: '3', title: 'Healthcare Provider Enhances Patient Care with Predictive Analytics', overview: 'Fynorra developed a predictive analytics model that helped a major healthcare provider anticipate patient needs and optimize resource allocation.', results: ['15% improvement in patient outcome predictions', 'Optimized staff scheduling', 'Reduced wait times by 25%'], client: 'HealthCare Solutions Group', imageUrl: '/health.png', slug: 'healthcare-predictive-care', dataAiHint: 'medical data' },
   ];
 }
 
@@ -61,7 +74,7 @@ export default async function CaseStudiesPage() {
       <Navbar />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Header */}
-        <header className="text-center mb-16">
+        <header className="text-center mb-16 pt-12">
           <Briefcase className="mx-auto h-16 w-16 text-primary mb-4" />
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4">
             Case Studies: Real Impact with Fynorra Solutions
@@ -95,7 +108,7 @@ export default async function CaseStudiesPage() {
                   </p>
                   <CardTitle className="text-3xl font-semibold mb-2">{featuredStudy.title}</CardTitle>
                 </CardHeader>
-                <CardDescription className="text-slate-300 mb-6 text-base leading-relaxed">
+                <CardDescription className="text-slate-300 mb-6 text-base leading-relaxed line-clamp-3">
                   {featuredStudy.overview}
                 </CardDescription>
                 <div className="mb-6">
@@ -111,7 +124,7 @@ export default async function CaseStudiesPage() {
                     ))}
                   </ul>
                 </div>
-                <Link href={`/case-studies/${featuredStudy.slug || featuredStudy.id}`} className="mt-auto">
+                <Link href={`/case-studies/${featuredStudy.slug}`} className="mt-auto">
                   <Button size="lg" className="group w-full sm:w-auto">
                     Read Full Case Study <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
@@ -148,7 +161,7 @@ export default async function CaseStudiesPage() {
                     <p className="text-slate-300 text-sm leading-relaxed line-clamp-4">{study.overview}</p>
                   </CardContent>
                   <div className="p-6 pt-2 mt-auto">
-                    <Link href={`/case-studies/${study.slug || study.id}`}>
+                    <Link href={`/case-studies/${study.slug}`}>
                       <Button variant="outline" className="w-full group text-sm border-primary/50 hover:bg-primary/10 hover:text-primary">
                         Learn More <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                       </Button>
