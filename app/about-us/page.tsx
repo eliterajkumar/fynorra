@@ -41,13 +41,13 @@ async function getTeamMembers(): Promise<TeamMember[]> {
 
 function getSampleTeamMembers(): TeamMember[] {
   return [
-    { id: '1', name: 'Dr. Elara Vance', role: 'Founder & CEO', bio: 'Visionary leader with 15+ years in AI and enterprise software, passionate about driving innovation.', photoUrl: 'https://placehold.co/400x400.png', dataAiHint: 'professional woman', linkedinUrl: '#', twitterUrl: '#'},
-    { id: '2', name: 'Marcus Chen', role: 'Chief Technology Officer', bio: 'Expert technologist specializing in scalable AI architectures and cloud infrastructure.', photoUrl: 'https://placehold.co/400x400.png', dataAiHint: 'professional man', linkedinUrl: '#', githubUrl: '#' },
-    { id: '3', name: 'Aisha Khan', role: 'Head of Product', bio: 'Dedicated to crafting user-centric AI products that solve real-world business problems.', photoUrl: 'https://placehold.co/400x400.png', dataAiHint: 'tech professional', linkedinUrl: '#', twitterUrl: '#' },
+    { id: '1', name: 'Rajkumar', role: 'Founder & CEO', bio: 'Visionary leader in AI and enterprise software, passionate about driving innovation.', photoUrl: 'https://placehold.co/400x400.png', dataAiHint: 'professional man', linkedinUrl: 'https://www.linkedin.com/in/raj-kumar-704594265/', twitterUrl: '#'},
+    // { id: '2', name: 'Marcus Chen', role: 'Chief Technology Officer', bio: 'Expert technologist specializing in scalable AI architectures and cloud infrastructure.', photoUrl: 'https://placehold.co/400x400.png', dataAiHint: 'professional man', linkedinUrl: '#', githubUrl: '#' },
+    // { id: '3', name: 'Aisha Khan', role: 'Head of Product', bio: 'Dedicated to crafting user-centric AI products that solve real-world business problems.', photoUrl: 'https://placehold.co/400x400.png', dataAiHint: 'tech professional', linkedinUrl: '#', twitterUrl: '#' },
   ];
 }
 
-const storyText = "Founded in 2023, Fynorra embarked on a mission to revolutionize how businesses leverage AI and software for sustainable growth. We believe in the transformative power of technology to solve complex challenges and create new opportunities. Today, we’re proud to partner with enterprises worldwide, delivering innovative solutions that drive efficiency, enhance customer experiences, and unlock strategic advantages. Our journey is fueled by a passion for innovation and a commitment to our clients' success.";
+const storyText = "Founded in 2025, Fynorra embarked on a mission to revolutionize how businesses leverage AI and software for sustainable growth. We believe in the transformative power of technology to solve complex challenges and create new opportunities. Today, we’re proud to partner with enterprises worldwide, delivering innovative solutions that drive efficiency, enhance customer experiences, and unlock strategic advantages. Our journey is fueled by a passion for innovation and a commitment to our clients' success.";
 const missionText = "To empower businesses with intelligent, scalable, and custom-fit AI and software solutions that drive tangible results, foster innovation, and pave the way for a technologically advanced future.";
 
 export default async function AboutUsPage() {

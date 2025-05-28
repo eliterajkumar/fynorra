@@ -1,50 +1,62 @@
+
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { ArrowRight, Mail, Library, CalendarDays, Tag, Rss } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { SubscribeForm } from "./_components/subscribe-form";
 
-interface BlogPost {
+export interface BlogPost {
   id: string;
   title: string;
   snippet: string;
-  date: string; // Should be a format that can be displayed, or use Firestore Timestamp and format it
+  date: string;
   category: string;
-  imageUrl?: string; // Optional image URL
-  slug?: string; // For linking to full post
+  imageUrl?: string;
+  slug: string; // Added slug for linking
+  dataAiHint?: string;
 }
 
 async function getBlogPosts(): Promise<BlogPost[]> {
   try {
     const postsCollection = collection(db, "blogPosts");
-    const q = query(postsCollection, orderBy("date", "desc")); // Assuming 'date' field exists and is sortable
+    const q = query(postsCollection, orderBy("date", "desc"));
     const postsSnapshot = await getDocs(q);
-    const postsList = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BlogPost));
+    const postsList = postsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return { 
+        id: doc.id,
+        title: data.title || "Untitled Post",
+        snippet: data.snippet || "No snippet available.",
+        date: data.date || new Date().toISOString().split('T')[0],
+        category: data.category || "Uncategorized",
+        imageUrl: data.imageUrl,
+        slug: data.slug || doc.id, // Use slug from data or fallback to doc.id
+        dataAiHint: data.dataAiHint,
+      } as BlogPost;
+    });
     
     if (postsList.length === 0) {
-        // Fallback to sample data if Firestore is empty or not connected
         return getSampleBlogPosts();
     }
     return postsList;
   } catch (error) {
     console.error("Error fetching blog posts from Firestore:", error);
-    // Fallback to sample data in case of an error
     return getSampleBlogPosts();
   }
 }
 
+// Ensure sample posts also have slugs and dataAiHint
 function getSampleBlogPosts(): BlogPost[] {
   return [
-    { id: '1', title: 'The Future of AI in Enterprise Solutions', snippet: 'Explore how artificial intelligence is reshaping industries and what it means for your business.', date: '2024-07-28', category: 'AI Trends', imageUrl: 'https://placehold.co/800x400.png', slug: 'future-of-ai', dataAiHint: 'technology abstract' },
-    { id: '2', title: 'Mastering DevOps for Scalable Applications', snippet: 'A deep dive into DevOps practices that ensure reliability and scalability for modern applications.', date: '2024-07-25', category: 'Software Development', imageUrl: 'https://placehold.co/600x400.png', slug: 'mastering-devops', dataAiHint: 'cloud server' },
-    { id: '3', title: 'Automating Business Processes with Custom Chatbots', snippet: 'Discover the benefits of custom chatbots and how they can streamline customer interactions.', date: '2024-07-22', category: 'Business Automation', imageUrl: 'https://placehold.co/600x400.png', slug: 'automating-chatbots', dataAiHint: 'robot chat' },
-    { id: '4', title: 'Tech Insights: Navigating the Cloud Landscape', snippet: 'Understand the different cloud models and choose the right strategy for your organization.', date: '2024-07-18', category: 'Tech Insights', imageUrl: 'https://placehold.co/600x400.png', slug: 'navigating-cloud', dataAiHint: 'cloud computing' },
+    { id: '1', title: 'The Future of AI in Enterprise Solutions', snippet: 'Explore how artificial intelligence is reshaping industries and what it means for your business.', date: '2025-05-25', category: 'AI Trends', imageUrl: '/futureai 2.png', slug: 'future-of-ai-in-enterprise', dataAiHint: 'technology abstract' },
+    { id: '2', title: 'Mastering DevOps for Scalable Applications', snippet: 'A deep dive into DevOps practices that ensure reliability and scalability for modern applications.', date: '2025-05-25', category: 'Software Development', imageUrl: '/devops.png', slug: 'mastering-devops-for-scalability', dataAiHint: 'cloud server' },
+    { id: '3', title: 'Automating Business Processes with Custom Chatbots', snippet: 'Discover the benefits of custom chatbots and how they can streamline customer interactions.', date: '2025-05-25', category: 'Business Automation', imageUrl: '/chatbot.png', slug: 'automating-with-chatbots', dataAiHint: 'robot chat' },
+    { id: '4', title: 'Tech Insights: Navigating the Cloud Landscape', snippet: 'Understand the different cloud models and choose the right strategy for your organization.', date: '2025-05-25', category: 'Tech Insights', imageUrl: '/Cloud.png', slug: 'navigating-the-cloud-landscape', dataAiHint: 'cloud computing' },
   ];
 }
 
@@ -61,7 +73,7 @@ export default async function BlogPage() {
       <Navbar />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Header */}
-        <header className="text-center mb-16">
+        <header className="text-center mb-16 pt-12">
           <Rss className="mx-auto h-16 w-16 text-primary mb-4" />
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4">
             Fynorra Blog: Insights on AI & Innovation
@@ -96,10 +108,10 @@ export default async function BlogPage() {
                     <span className="flex items-center"><Tag className="h-4 w-4 mr-1.5" /> {featuredPost.category}</span>
                   </div>
                 </CardHeader>
-                <CardDescription className="text-slate-300 mb-6 text-base leading-relaxed">
+                <CardDescription className="text-slate-300 mb-6 text-base leading-relaxed line-clamp-3">
                   {featuredPost.snippet}
                 </CardDescription>
-                <Link href={`/blog/${featuredPost.slug || featuredPost.id}`}>
+                <Link href={`/blog/${featuredPost.slug}`}>
                   <Button className="group mt-auto w-full sm:w-auto">
                     Read More <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
@@ -123,7 +135,7 @@ export default async function BlogPage() {
                         src={post.imageUrl}
                         alt={post.title}
                         width={600}
-                        height={400}
+                        height={300} // Adjusted height for a 2:1 aspect ratio or similar
                         className="w-full h-48 object-cover rounded-t-lg"
                         data-ai-hint={post.dataAiHint || "technology article"}
                       />
@@ -136,10 +148,10 @@ export default async function BlogPage() {
                       </div>
                     </CardHeader>
                     <CardContent className="flex-grow">
-                      <p className="text-slate-300 text-sm leading-relaxed">{post.snippet}</p>
+                      <p className="text-slate-300 text-sm leading-relaxed line-clamp-3">{post.snippet}</p>
                     </CardContent>
                     <div className="p-6 pt-0 mt-auto">
-                       <Link href={`/blog/${post.slug || post.id}`}>
+                       <Link href={`/blog/${post.slug}`}>
                         <Button variant="outline" className="w-full group text-sm border-primary/50 hover:bg-primary/10 hover:text-primary">
                           Read More <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
@@ -149,7 +161,11 @@ export default async function BlogPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-slate-400">No recent posts available. Check back soon!</p>
+               featuredPost ? (
+                <p className="text-slate-400">No other recent posts available. Check back soon!</p>
+              ) : (
+                <p className="text-slate-400">No blog posts available at the moment. Please check back soon!</p>
+              )
             )}
           </section>
 
@@ -185,3 +201,5 @@ export default async function BlogPage() {
     </div>
   );
 }
+
+    

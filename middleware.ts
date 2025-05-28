@@ -5,7 +5,7 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/sign-in(.*)',
   '/sign-up(.*)',
-  '/about-us',
+  '/about-us(.*)',
   '/blog(.*)', // Allow access to blog posts and categories
   '/case-studies(.*)',
   '/cloud-devops(.*)',
