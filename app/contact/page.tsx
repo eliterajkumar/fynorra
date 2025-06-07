@@ -93,9 +93,12 @@ export default function ContactUsPage() {
               <p className="text-slate-300 mb-4 text-sm">
                 Connect with our support team for real-time help.
               </p>
-              <Button className="w-full group">
-                Chat Now <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
+              <Link href="/chat">
+  <Button className="w-full group">
+    Chat Now <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+  </Button>
+</Link>
+
             </Card>
           </aside>
         </div>
