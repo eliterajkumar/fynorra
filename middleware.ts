@@ -15,6 +15,7 @@ const isPublicRoute = createRouteMatcher([
   '/pricing',
   '/software-development(.*)',
   '/whitepapers(.*)',
+  '/chat',
   '/api/(.*)', // Assuming API routes might be public or handle their own auth
 ]);
 
