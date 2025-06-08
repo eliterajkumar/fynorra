@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useState } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -9,26 +9,34 @@ import { Button } from "@/components/ui/button";
 export default function ChatPage() {
   const [messages, setMessages] = useState<{ sender: string; text: string }[]>([]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
 
-    const userMsg = { sender: "user", text: input };
+    const userMsg = { sender: "user", text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8000/ask", {
+      const res = await fetch("http://localhost:8001/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: input }),
+        body: JSON.stringify({ question: input.trim() }),
       });
-      const data = await res.json();
-      setMessages((prev) => [...prev, { sender: "bot", text: data.answer }]);
-    } catch (error) {
-      setMessages((prev) => [...prev, { sender: "bot", text: "⚠️ Server error!" }]);
-    }
 
-    setInput("");
+      const data = await res.json();
+      const botReply = data.answer || "❌ No response from assistant.";
+      setMessages((prev) => [...prev, { sender: "bot", text: botReply }]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        { sender: "bot", text: "⚠️ Server error! Please try again." },
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -67,6 +75,13 @@ export default function ChatPage() {
                   </div>
                 </div>
               ))}
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-700 text-white rounded-xl px-4 py-2 max-w-xs text-sm">
+                    ⏳ Thinking...
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Input Section */}
@@ -79,7 +94,10 @@ export default function ChatPage() {
                 placeholder="Type your message..."
                 className="flex-grow bg-slate-700 text-white px-4 py-2 rounded-l outline-none border border-slate-600"
               />
-              <Button onClick={sendMessage} className="rounded-r bg-cyan-400 text-black hover:bg-cyan-300">
+              <Button
+                onClick={sendMessage}
+                className="rounded-r bg-cyan-400 text-black hover:bg-cyan-300"
+              >
                 <SendHorizonal className="w-4 h-4" />
               </Button>
             </div>
