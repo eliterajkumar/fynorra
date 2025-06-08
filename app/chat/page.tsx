@@ -12,32 +12,53 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
 
   const sendMessage = async () => {
-    if (!input.trim() || loading) return;
+  if (!input.trim()) return;
 
-    const userMsg = { sender: "user", text: input.trim() };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput("");
-    setLoading(true);
+  const userMsg = { sender: "user", text: input };
+  setMessages((prev) => [...prev, userMsg]);
 
-    try {
-      const res = await fetch("https://5076-103-248-34-26.ngrok-free.app/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: input.trim() }),
-      });
+  setInput("");
 
-      const data = await res.json();
-      const botReply = data.answer || "❌ No response from assistant.";
-      setMessages((prev) => [...prev, { sender: "bot", text: botReply }]);
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        { sender: "bot", text: "⚠️ Server error! Please try again." },
-      ]);
-    } finally {
-      setLoading(false);
+  // Add empty bot message first
+  const botIndex = messages.length + 1;
+  setMessages((prev) => [...prev, { sender: "bot", text: "" }]);
+
+  try {
+    const res = await fetch(" https://5076-103-248-34-26.ngrok-free.app/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: input }),
+    });
+
+    const reader = res.body?.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    let botResponse = "";
+
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        botResponse += chunk;
+
+        // Update last bot message
+        setMessages((prev) =>
+          prev.map((msg, i) =>
+            i === botIndex ? { ...msg, text: botResponse } : msg
+          )
+        );
+      }
     }
-  };
+  } catch (error) {
+    setMessages((prev) => [
+      ...prev.slice(0, -1),
+      { sender: "bot", text: "⚠️ Server error!" },
+    ]);
+  }
+};
+
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#1e1e2f] to-[#2a2a4e] text-slate-50">
