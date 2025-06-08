@@ -11,63 +11,33 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
- const sendMessage = async () => {
-  if (!input.trim()) return;
+  const sendMessage = async () => {
+    if (!input.trim() || loading) return;
 
-  const userMsg = { sender: "user", text: input };
-  const question = input;
-  setMessages((prev) => [...prev, userMsg]);
-  setInput("");
+    const userMsg = { sender: "user", text: input.trim() };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    setLoading(true);
 
-  // Add placeholder for streaming response
-  setMessages((prev) => [...prev, { sender: "bot", text: "" }]);
+    try {
+      const res = await fetch("https://f58b-103-248-34-26.ngrok-free.app/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: input.trim() }),
+      });
 
-  try {
-    const res = await fetch("https://5076-103-248-34-26.ngrok-free.app/ask/stream", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question }),
-    });
-
-    const reader = res.body?.getReader();
-    const decoder = new TextDecoder("utf-8");
-    let botResponse = "";
-
-    if (reader) {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-
-        // Parse only the valid JSON part if needed
-        try {
-          const parsed = JSON.parse(chunk);
-          if (parsed.answer) {
-            botResponse += parsed.answer;
-          } else {
-            botResponse += chunk; // fallback if not JSON or no answer field
-          }
-        } catch {
-          botResponse += chunk; // handle raw text if it's not full JSON
-        }
-
-        setMessages((prev) =>
-          prev.map((msg, i) =>
-            i === prev.length - 1 ? { ...msg, text: botResponse } : msg
-          )
-        );
-      }
+      const data = await res.json();
+      const botReply = data.answer || "❌ No response from assistant.";
+      setMessages((prev) => [...prev, { sender: "bot", text: botReply }]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        { sender: "bot", text: "⚠️ Server error! Please try again." },
+      ]);
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error(err);
-    setMessages((prev) => [
-      ...prev.slice(0, -1),
-      { sender: "bot", text: "⚠️ Server error!" },
-    ]);
-  }
-};
-
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#1e1e2f] to-[#2a2a4e] text-slate-50">
