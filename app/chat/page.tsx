@@ -20,7 +20,7 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(" https://a985-103-248-34-26.ngrok-free.app/ask", {
+      const res = await fetch("https://5076-103-248-34-26.ngrok-free.app/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: input.trim() }),
