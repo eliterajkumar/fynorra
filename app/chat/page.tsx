@@ -11,28 +11,26 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const sendMessage = async () => {
+ const sendMessage = async () => {
   if (!input.trim()) return;
 
   const userMsg = { sender: "user", text: input };
+  const question = input;
   setMessages((prev) => [...prev, userMsg]);
-
   setInput("");
 
-  // Add empty bot message first
-  const botIndex = messages.length + 1;
+  // Add placeholder for streaming response
   setMessages((prev) => [...prev, { sender: "bot", text: "" }]);
 
   try {
-    const res = await fetch(" https://5076-103-248-34-26.ngrok-free.app/ask", {
+    const res = await fetch("https://5076-103-248-34-26.ngrok-free.app/ask/stream", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: input }),
+      body: JSON.stringify({ question }),
     });
 
     const reader = res.body?.getReader();
     const decoder = new TextDecoder("utf-8");
-
     let botResponse = "";
 
     if (reader) {
@@ -41,17 +39,28 @@ export default function ChatPage() {
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        botResponse += chunk;
 
-        // Update last bot message
+        // Parse only the valid JSON part if needed
+        try {
+          const parsed = JSON.parse(chunk);
+          if (parsed.answer) {
+            botResponse += parsed.answer;
+          } else {
+            botResponse += chunk; // fallback if not JSON or no answer field
+          }
+        } catch {
+          botResponse += chunk; // handle raw text if it's not full JSON
+        }
+
         setMessages((prev) =>
           prev.map((msg, i) =>
-            i === botIndex ? { ...msg, text: botResponse } : msg
+            i === prev.length - 1 ? { ...msg, text: botResponse } : msg
           )
         );
       }
     }
-  } catch (error) {
+  } catch (err) {
+    console.error(err);
     setMessages((prev) => [
       ...prev.slice(0, -1),
       { sender: "bot", text: "⚠️ Server error!" },
