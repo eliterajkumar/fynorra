@@ -50,7 +50,7 @@ export default function ChatPage(): JSX.Element { // Explicitly type the functio
       };
 
       // Make the API call to your FastAPI backend
-      const res = await fetch("https://66ba-103-248-34-26.ngrok-free.app/ask", {
+      const res = await fetch("https://c9a7-103-248-34-26.ngrok-free.app/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
