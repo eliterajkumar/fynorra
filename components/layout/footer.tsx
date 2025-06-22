@@ -1,7 +1,7 @@
-
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Linkedin, Twitter, Send, Copyright } from "lucide-react";
@@ -20,9 +20,15 @@ export function Footer() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 mb-12">
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center mb-4">
-              <span className="text-2xl font-bold uppercase text-foreground">FYNORRA</span>
-            </Link>
+          <Link href="/" className="flex items-center mb-4">
+  <Image 
+    src="/logo.jpeg" // path relative to the /public folder
+    alt="FYNORRA Logo"
+    width={40}
+    height={40}
+    className="mr-2 rounded-full"
+  />
+</Link>
             <p className="text-foreground/70 max-w-sm">
               Empowering businesses with cutting-edge IT software development and custom AI solutions to build the future.
             </p>

@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
+import { Navbar } from "@/components/layout/navbar"; // Navbar component
+import { Footer } from "@/components/layout/footer"; // Footer component
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bot, SendHorizonal } from "lucide-react";
+import { Bot, SendHorizonal, Upload } from "lucide-react"; // Icons
 import { Button } from "@/components/ui/button";
 
-// Define the type for a single message object
+// Type for a single message object
 interface Message {
   sender: "user" | "bot";
   text: string;
@@ -17,168 +17,238 @@ export default function ChatPage(): JSX.Element {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [chatId, setChatId] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null); // Ref to scroll to the latest message
 
+  // State for PDF handling
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // Scroll to the bottom of the chat when messages update
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPdfFile(file); // Show filename immediately in the header
+    setLoading(true);
+    setMessages([]); // Clear previous messages
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      // NOTE: Replace with your actual backend upload URL
+      const res = await fetch("https://c9a7-103-248-34-26.ngrok-free.app/rag/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error(`Upload failed with status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (!data.session_id) {
+        throw new Error("`session_id` not found in the backend response.");
+      }
+      
+      setSessionId(data.session_id);
+      setMessages([{ 
+        sender: "bot", 
+        text: `PDF "${file.name}" uploaded. You can now ask questions about its content.` 
+      }]);
+
+    } catch (err: any) {
+      console.error("PDF upload error:", err);
+      setMessages([{ 
+        sender: "bot", 
+        text: `❌ Failed to process PDF. ${err.message}. Please try another file.` 
+      }]);
+      setPdfFile(null); // Reset on error
+      setSessionId(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const sendMessage = async (): Promise<void> => {
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loading || !sessionId) return;
 
     const userMsg: Message = { sender: "user", text: input.trim() };
-    setMessages((prev) => [...prev, userMsg]);
+    const updatedMessagesAfterUser = [...messages, userMsg];
+    setMessages(updatedMessagesAfterUser);
     setInput("");
     setLoading(true);
 
     try {
       const payload = {
         question: userMsg.text,
-        chat_id: chatId,
+        session_id: sessionId, // Pass the session_id for contextual RAG
       };
 
-      // Set a timeout for the fetch request
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60-second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-      const res = await fetch("https://66ba-103-248-34-26.ngrok-free.app/ask", {
+      // NOTE: Ensure this endpoint is correct for your RAG backend
+      const res = await fetch("https://c9a7-103-248-34-26.ngrok-free.app/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-        signal: controller.signal, // Connect the abort controller to the fetch request
+        signal: controller.signal,
       });
 
-      clearTimeout(timeoutId); // Clear the timeout if the fetch completes in time
+      clearTimeout(timeoutId);
 
-      if (!res.ok) { // Check for HTTP errors (e.g., 500, 503)
+      if (!res.ok) {
         const errorText = await res.text();
         console.error("API HTTP Error:", res.status, errorText);
-        setMessages((prev) => [
-          ...prev,
-          { sender: "bot", text: `⚠️ API Error (${res.status})! Please try again.` },
-        ]);
-        return;
+        throw new Error(`API Error (${res.status})! Please try again.`);
       }
 
-      const data: { answer?: string; chat_id?: string; type?: string; error_detail?: string } = await res.json();
+      const data: { answer?: string; } = await res.json();
       
-      let botReply: string = data.answer || ""; // Initialize with empty string
-      
-      // Better handling for different 'type' responses from backend
-      if (data.type === "no_info") {
-          botReply = data.answer || "I don't have enough information from Fynorra's knowledge base to answer that. Could you please rephrase, or ask about our core services like chatbots, automation, or software development?";
-      } else if (data.type === "error") {
-          botReply = data.answer || "Apologies! A critical error occurred. Please try again or contact support if the issue persists.";
-          console.error("Backend returned error type:", data.error_detail);
-      } else if (data.type === "db_connection_error") {
-          botReply = data.answer || "I'm sorry, I'm having trouble connecting to my database right now. Please try again in a moment.";
-          console.error("Backend returned DB connection error:", data.error_detail);
-      } else if (!botReply.trim()) { // If 'answer' is empty or just whitespace
-          botReply = "❌ I received an empty response. Please try rephrasing your question or ask about Fynorra's services.";
-      }
+      let botReplyText: string = data.answer || "I received no answer. Please try rephrasing.";
 
+      const botMsg: Message = { sender: "bot", text: botReplyText };
+      setMessages((prev) => [...prev, botMsg]);
 
-      setMessages((prev) => [...prev, { sender: "bot", text: botReply }]);
-      if (data.chat_id) {
-        setChatId(data.chat_id); // Update chat_id from response
-      }
-    } catch (error: any) { // Catch any errors, including network errors or aborts
+    } catch (error: any) {
+      const errorBotMsg: Message = { sender: "bot", text: "" };
       if (error.name === 'AbortError') {
-          setMessages((prev) => [
-              ...prev,
-              { sender: "bot", text: "⏳ Request timed out. Please try again later." },
-          ]);
-          console.error("Fetch request timed out:", error);
+          errorBotMsg.text = "⏳ Request timed out. The server might be busy. Please try again later.";
       } else {
-          setMessages((prev) => [
-              ...prev,
-              { sender: "bot", text: "⚠️ Network error! Please check your connection or server status." },
-          ]);
-          console.error("General fetch error:", error);
+          errorBotMsg.text = `⚠️ Error: ${error.message}`;
       }
+      setMessages((prev) => [...prev, errorBotMsg]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#1e1e2f] to-[#2a2a4e] text-slate-50">
-      <Navbar />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
-        <header className="text-center mb-8 sm:mb-12 pt-4 sm:pt-8">
-          <Bot className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-cyan-400 mb-3 sm:mb-4 animate-bounce-slow" />
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-2 sm:mb-4 leading-tight">
-            Fynorra AI Chat
-          </h1>
-          <p className="text-base sm:text-lg text-slate-300 max-w-xl mx-auto">
-            Ask your queries and get instant assistance from our intelligent AI.
-          </p>
-        </header>
+    // Main container: full screen height, gradient background
+    <div className="flex min-h-screen bg-gradient-to-br from-[#1e1e2f] to-[#2a2a4e] text-slate-50">
+      {/* Main chat content area */}
+      <div className="flex flex-col flex-grow relative">
+        <Navbar />
+        
+        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 flex flex-col h-full">
+          {/* Header */}
+          <header className="text-center mb-8 sm:mb-12 pt-4 sm:pt-8">
+            <Bot className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-cyan-400 mb-3 sm:mb-4 animate-bounce-slow" />
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-2 sm:mb-4 leading-tight">
+              Fynorra AI RAG Chat
+            </h1>
+            <p className="text-base sm:text-lg text-slate-300 max-w-xl mx-auto">
+              Upload a PDF and get instant answers from your document.
+            </p>
+          </header>
 
-        <Card className="bg-slate-800/60 border-slate-700/50 rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl sm:text-2xl font-bold text-cyan-400">
-              Live Chat
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col h-full">
-            <div className="flex-grow min-h-[40vh] max-h-[60vh] md:max-h-[70vh] overflow-y-auto space-y-3 p-2 sm:p-3 custom-scrollbar rounded-lg bg-slate-800/50">
-              {messages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex ${
-                    msg.sender === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`rounded-xl px-4 py-2 text-sm sm:text-base max-w-[85%] sm:max-w-[75%] break-words shadow-md
-                      ${
-                        msg.sender === "user"
-                          ? "bg-gradient-to-r from-cyan-600 to-cyan-700 text-white"
-                          : "bg-gradient-to-r from-gray-700 to-gray-800 text-white"
+          {/* Chat Card - main chat display area */}
+          <Card className="bg-slate-800/60 border-slate-700/50 rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto flex-grow overflow-hidden flex flex-col w-full">
+            <CardHeader className="pb-4">
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <CardTitle className="text-xl sm:text-2xl font-bold text-cyan-400">
+                  Live Chat
+                </CardTitle>
+                {pdfFile && (
+                  <p className="text-sm text-cyan-300 bg-cyan-900/50 px-2 py-1 rounded-md">
+                    Active: <strong>{pdfFile.name}</strong>
+                  </p>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-col flex-grow min-h-0">
+              {/* Chat messages display area */}
+              <div className="flex-grow overflow-y-auto space-y-3 p-2 sm:p-3 custom-scrollbar rounded-lg bg-slate-800/50">
+                {messages.length > 0 ? (
+                  messages.map((msg, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex ${
+                        msg.sender === "user" ? "justify-end" : "justify-start"
                       }`}
-                  >
-                    {msg.text}
+                    >
+                      <div
+                        className={`rounded-xl px-4 py-2 text-sm sm:text-base max-w-[85%] sm:max-w-[75%] break-words shadow-md ${
+                          msg.sender === "user"
+                            ? "bg-gradient-to-r from-cyan-600 to-cyan-700 text-white"
+                            : "bg-gradient-to-r from-gray-700 to-gray-800 text-white"
+                        }`}
+                      >
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-center text-slate-400">
+                    <label
+                      htmlFor="pdf-upload"
+                      className="flex items-center gap-2 cursor-pointer bg-slate-700 hover:bg-slate-600 text-cyan-300 font-bold py-3 px-5 rounded-xl transition-colors duration-200"
+                    >
+                      <Upload size={20} />
+                      <span>{loading ? "Processing..." : "Upload a PDF"}</span>
+                    </label>
+                    <input
+                      id="pdf-upload"
+                      type="file"
+                      accept="application/pdf"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      disabled={loading}
+                    />
+                    <p className="mt-4 text-sm">
+                      Your document will be processed to answer your questions.
+                    </p>
                   </div>
-                </div>
-              ))}
-              {loading && (
-                <div className="flex justify-start">
-                  <div className="bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-xl px-4 py-2 text-sm sm:text-base max-w-xs shadow-md">
-                    ⏳ Thinking...
+                )}
+                {loading && messages.length > 0 && (
+                  <div className="flex justify-start">
+                    <div className="bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-xl px-4 py-2 text-sm sm:text-base max-w-xs shadow-md">
+                      ⏳ Thinking...
+                    </div>
                   </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
 
-            <div className="mt-4 flex gap-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
-                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && sendMessage()}
-                placeholder={loading ? "AI is typing..." : "Type your message..."}
-                disabled={loading}
-                className="flex-grow bg-slate-700 text-white px-4 py-2 sm:py-3 rounded-xl outline-none border border-slate-600 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 placeholder-slate-400 transition-all duration-200"
-              />
-              <Button
-                onClick={sendMessage}
-                disabled={loading || !input.trim()}
-                className="rounded-xl bg-cyan-500 text-slate-900 hover:bg-cyan-400 transition-colors duration-200 p-2 sm:p-3 shadow-lg"
-              >
-                <SendHorizonal className="w-5 h-5 sm:w-6 sm:h-6" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </main>
+              {/* Input Section */}
+              <div className="mt-4 flex gap-2 flex-shrink-0">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && sendMessage()}
+                  placeholder={
+                    !sessionId
+                      ? "Please upload a PDF to begin"
+                      : loading
+                      ? "AI is thinking..."
+                      : "Ask a question about the PDF..."
+                  }
+                  disabled={loading || !sessionId}
+                  className="flex-grow bg-slate-700 text-white px-4 py-2 sm:py-3 rounded-xl outline-none border border-slate-600 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 placeholder-slate-400 transition-all duration-200 disabled:opacity-50"
+                />
+                <Button
+                  onClick={sendMessage}
+                  disabled={loading || !input.trim() || !sessionId}
+                  className="rounded-xl bg-cyan-500 text-slate-900 hover:bg-cyan-400 transition-colors duration-200 p-2 sm:p-3 shadow-lg disabled:opacity-50"
+                >
+                  <SendHorizonal className="w-5 h-5 sm:w-6 sm:h-6" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
 
-      <Footer />
-
+      {/* Custom CSS for scrollbar styling and animation */}
       <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 8px;
