@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Fynorra Vision',
+  title: 'Fynorra',
   description: 'Train Custom AI Models. Deploy Enterprise Solutions.',
 };
 
