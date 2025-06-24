@@ -37,7 +37,7 @@ export default function ChatPage(): JSX.Element {
     formData.append("file", file);
 
     try {
-      const res = await fetch("https://3b6a-103-248-34-26.ngrok-free.app/rag/upload", {
+      const res = await fetch("https://fynorra-ai.onrender.com/rag/upload", {
         method: "POST",
         body: formData,
       });
@@ -79,7 +79,7 @@ export default function ChatPage(): JSX.Element {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-      const res = await fetch("https://3b6a-103-248-34-26.ngrok-free.app/rag/query", {
+      const res = await fetch("https://fynorra-ai.onrender.com/rag/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
