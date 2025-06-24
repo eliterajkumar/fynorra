@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Navbar } from "@/components/layout/navbar"; // Navbar component
-import { Footer } from "@/components/layout/footer"; // Footer component
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bot, SendHorizonal, Upload } from "lucide-react"; // Icons
+import { Bot, SendHorizonal, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// Type for a single message object
 interface Message {
   sender: "user" | "bot";
   text: string;
@@ -17,13 +16,9 @@ export default function ChatPage(): JSX.Element {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null); // Ref to scroll to the latest message
-
-  // State for PDF handling
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
 
-  // Scroll to the bottom of the chat when messages update
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -34,16 +29,15 @@ export default function ChatPage(): JSX.Element {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setPdfFile(file); // Show filename immediately in the header
+    setPdfFile(file);
     setLoading(true);
-    setMessages([]); // Clear previous messages
+    setMessages([]);
 
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      // NOTE: Replace with your actual backend upload URL
-      const res = await fetch("https://c9a7-103-248-34-26.ngrok-free.app/rag/upload", {
+      const res = await fetch("https://3b6a-103-248-34-26.ngrok-free.app/rag/upload", {
         method: "POST",
         body: formData,
       });
@@ -52,50 +46,40 @@ export default function ChatPage(): JSX.Element {
         throw new Error(`Upload failed with status: ${res.status}`);
       }
 
-      const data = await res.json();
-      if (!data.session_id) {
-        throw new Error("`session_id` not found in the backend response.");
-      }
-      
-      setSessionId(data.session_id);
-      setMessages([{ 
-        sender: "bot", 
-        text: `PDF "${file.name}" uploaded. You can now ask questions about its content.` 
-      }]);
-
+      setMessages([
+        {
+          sender: "bot",
+          text: `PDF "${file.name}" uploaded. You can now ask questions about its content.`,
+        },
+      ]);
     } catch (err: any) {
-      console.error("PDF upload error:", err);
-      setMessages([{ 
-        sender: "bot", 
-        text: `❌ Failed to process PDF. ${err.message}. Please try another file.` 
-      }]);
-      setPdfFile(null); // Reset on error
-      setSessionId(null);
+      setMessages([
+        {
+          sender: "bot",
+          text: `❌ Failed to process PDF. ${err.message}. Please try another file.`,
+        },
+      ]);
+      setPdfFile(null);
     } finally {
       setLoading(false);
     }
   };
 
   const sendMessage = async (): Promise<void> => {
-    if (!input.trim() || loading || !sessionId) return;
+    if (!input.trim() || loading || !pdfFile) return;
 
     const userMsg: Message = { sender: "user", text: input.trim() };
-    const updatedMessagesAfterUser = [...messages, userMsg];
-    setMessages(updatedMessagesAfterUser);
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setLoading(true);
 
     try {
-      const payload = {
-        question: userMsg.text,
-        session_id: sessionId, // Pass the session_id for contextual RAG
-      };
+      const payload = { question: userMsg.text };
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-      // NOTE: Ensure this endpoint is correct for your RAG backend
-      const res = await fetch("https://c9a7-103-248-34-26.ngrok-free.app/ask", {
+      const res = await fetch("https://3b6a-103-248-34-26.ngrok-free.app/rag/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -106,39 +90,34 @@ export default function ChatPage(): JSX.Element {
 
       if (!res.ok) {
         const errorText = await res.text();
-        console.error("API HTTP Error:", res.status, errorText);
-        throw new Error(`API Error (${res.status})! Please try again.`);
+        throw new Error(`API Error (${res.status}): ${errorText}`);
       }
 
-      const data: { answer?: string; } = await res.json();
-      
-      let botReplyText: string = data.answer || "I received no answer. Please try rephrasing.";
+      const data: { answer?: string } = await res.json();
+      const botReplyText: string = data.answer || "I received no answer. Please try rephrasing.";
 
-      const botMsg: Message = { sender: "bot", text: botReplyText };
-      setMessages((prev) => [...prev, botMsg]);
-
+      setMessages((prev) => [...prev, { sender: "bot", text: botReplyText }]);
     } catch (error: any) {
-      const errorBotMsg: Message = { sender: "bot", text: "" };
-      if (error.name === 'AbortError') {
-          errorBotMsg.text = "⏳ Request timed out. The server might be busy. Please try again later.";
-      } else {
-          errorBotMsg.text = `⚠️ Error: ${error.message}`;
-      }
-      setMessages((prev) => [...prev, errorBotMsg]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text:
+            error.name === "AbortError"
+              ? "⏳ Request timed out. The server might be busy. Please try again later."
+              : `⚠️ Error: ${error.message}`,
+        },
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    // Main container: full screen height, gradient background
     <div className="flex min-h-screen bg-gradient-to-br from-[#1e1e2f] to-[#2a2a4e] text-slate-50">
-      {/* Main chat content area */}
       <div className="flex flex-col flex-grow relative">
         <Navbar />
-        
         <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 flex flex-col h-full">
-          {/* Header */}
           <header className="text-center mb-8 sm:mb-12 pt-4 sm:pt-8">
             <Bot className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-cyan-400 mb-3 sm:mb-4 animate-bounce-slow" />
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-2 sm:mb-4 leading-tight">
@@ -148,8 +127,6 @@ export default function ChatPage(): JSX.Element {
               Upload a PDF and get instant answers from your document.
             </p>
           </header>
-
-          {/* Chat Card - main chat display area */}
           <Card className="bg-slate-800/60 border-slate-700/50 rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto flex-grow overflow-hidden flex flex-col w-full">
             <CardHeader className="pb-4">
               <div className="flex justify-between items-center flex-wrap gap-2">
@@ -164,7 +141,6 @@ export default function ChatPage(): JSX.Element {
               </div>
             </CardHeader>
             <CardContent className="flex flex-col flex-grow min-h-0">
-              {/* Chat messages display area */}
               <div className="flex-grow overflow-y-auto space-y-3 p-2 sm:p-3 custom-scrollbar rounded-lg bg-slate-800/50">
                 {messages.length > 0 ? (
                   messages.map((msg, idx) => (
@@ -216,8 +192,6 @@ export default function ChatPage(): JSX.Element {
                 )}
                 <div ref={messagesEndRef} />
               </div>
-
-              {/* Input Section */}
               <div className="mt-4 flex gap-2 flex-shrink-0">
                 <input
                   type="text"
@@ -225,18 +199,18 @@ export default function ChatPage(): JSX.Element {
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
                   onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && sendMessage()}
                   placeholder={
-                    !sessionId
+                    !pdfFile
                       ? "Please upload a PDF to begin"
                       : loading
                       ? "AI is thinking..."
                       : "Ask a question about the PDF..."
                   }
-                  disabled={loading || !sessionId}
+                  disabled={loading || !pdfFile}
                   className="flex-grow bg-slate-700 text-white px-4 py-2 sm:py-3 rounded-xl outline-none border border-slate-600 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 placeholder-slate-400 transition-all duration-200 disabled:opacity-50"
                 />
                 <Button
                   onClick={sendMessage}
-                  disabled={loading || !input.trim() || !sessionId}
+                  disabled={loading || !input.trim() || !pdfFile}
                   className="rounded-xl bg-cyan-500 text-slate-900 hover:bg-cyan-400 transition-colors duration-200 p-2 sm:p-3 shadow-lg disabled:opacity-50"
                 >
                   <SendHorizonal className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -247,34 +221,24 @@ export default function ChatPage(): JSX.Element {
         </main>
         <Footer />
       </div>
-
-      {/* Custom CSS for scrollbar styling and animation */}
       <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 8px;
         }
-
         .custom-scrollbar::-webkit-scrollbar-track {
           background: #333;
           border-radius: 10px;
         }
-
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #06b6d4; /* cyan-500 */
+          background: #06b6d4;
           border-radius: 10px;
         }
-
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #0ea5e9; /* cyan-600 */
+          background: #0ea5e9;
         }
-
         @keyframes bounce-slow {
-          0%, 100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-8px);
-          }
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
         }
         .animate-bounce-slow {
           animation: bounce-slow 3s infinite ease-in-out;
