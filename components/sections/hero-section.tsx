@@ -24,27 +24,60 @@ export function HeroSection() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="max-w-4xl mx-auto mt-16">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-50 mt-4">
-              Train Custom AI Models.
+              Custom AI Solutions & Chatbots
               <br />
-              <span className="block sm:inline-block">Deploy Enterprise Solutions.</span>
+              <span className="block sm:inline-block">for Enterprise Growth</span>
             </h1>
             <p className="mt-6 max-w-2xl mx-auto text-lg sm:text-xl text-slate-300">
-              From intelligent chatbots to full-scale automation, experience our AI engine in action.
-              Watch how it chats from your PDF in real time.
+              Transform your business with tailored AI chatbots, custom LLMs, and intelligent automation. 
+              From customer service to predictive analytics, we build AI solutions that drive real results.
             </p>
+
+            {/* Key Benefits */}
+            <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm text-slate-400">
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-primary rounded-full"></span>
+                24/7 Customer Support
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-primary rounded-full"></span>
+                Custom AI Models
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-primary rounded-full"></span>
+                Enterprise Integration
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-primary rounded-full"></span>
+                Scalable Solutions
+              </span>
+            </div>
 
             {/* 🎬 Demo Video Embed */}
             <div className="mt-10">
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full max-w-3xl mx-auto rounded-2xl shadow-xl ring-1 ring-sky-600/20"
-              >
-                <source src="/fynorra-demo.mp4" type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
+              <div className="relative w-full max-w-3xl mx-auto rounded-2xl shadow-xl ring-1 ring-sky-600/20 overflow-hidden">
+                <video
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full"
+                  poster="/video-poster.jpg"
+                  preload="metadata"
+                >
+                  <source src="/fynorra-demo.mp4" type="video/mp4" />
+                  <source src="/fynorra-demo.webm" type="video/webm" />
+                  <div className="absolute inset-0 bg-slate-800 flex items-center justify-center text-slate-400">
+                    <div className="text-center">
+                      <p className="text-lg font-semibold mb-2">AI Chatbot Demo</p>
+                      <p className="text-sm">Watch our custom AI chatbot in action</p>
+                      <Link href="/chat" className="inline-block mt-4 px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+                        Try Live Demo
+                      </Link>
+                    </div>
+                  </div>
+                </video>
+              </div>
             </div>
 
             {/* CTA Buttons */}
@@ -61,9 +94,19 @@ export function HeroSection() {
                   size="lg"
                   className="w-full sm:w-auto text-base px-8 py-6 group"
                 >
-                  Talk to Us
+                  Get Custom Quote
                 </Button>
               </Link>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="mt-8 text-center">
+              <p className="text-sm text-slate-400 mb-4">Trusted by businesses worldwide</p>
+              <div className="flex justify-center items-center gap-6 opacity-60">
+                <span className="text-xs text-slate-500">✓ Enterprise Security</span>
+                <span className="text-xs text-slate-500">✓ 99.9% Uptime</span>
+                <span className="text-xs text-slate-500">✓ 24/7 Support</span>
+              </div>
             </div>
           </div>
         </div>

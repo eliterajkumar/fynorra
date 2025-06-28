@@ -1,4 +1,3 @@
-
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,34 @@ import Link from "next/link";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { icons as lucideIcons, type LucideProps, HelpCircle } from 'lucide-react';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Custom Software Development Services | Fynorra',
+  description: 'Expert software development services including web applications, mobile apps, API development, and enterprise solutions. Build scalable, innovative software with Fynorra.',
+  keywords: [
+    'software development',
+    'custom software',
+    'web application development',
+    'mobile app development',
+    'API development',
+    'enterprise software',
+    'UI/UX design',
+    'legacy system modernization',
+    'full-stack development',
+    'software consulting',
+    'agile development',
+    'software architecture'
+  ],
+  openGraph: {
+    title: 'Custom Software Development Services | Fynorra',
+    description: 'Expert software development services including web applications, mobile apps, API development, and enterprise solutions.',
+    url: 'https://www.fynorra.com/software-development',
+  },
+  alternates: {
+    canonical: '/software-development',
+  },
+};
 
 const renderIcon = (name: string | undefined, props?: LucideProps) => {
   if (!name) return <HelpCircle {...props} />;
@@ -167,7 +194,7 @@ export default async function SoftwareDevelopmentPage() {
           <Zap className="mx-auto h-12 w-12 text-primary mb-4" />
           <h2 className="text-3xl font-bold mb-4">Need a Custom Software Solution?</h2>
           <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-8">
-            Let’s build it together. Contact Fynorra to discuss your project and how we can bring your ideas to life.
+            Let's build it together. Contact Fynorra to discuss your project and how we can bring your ideas to life.
           </p>
           <Link href="/contact">
             <Button size="lg" className="group text-lg px-8 py-3">
