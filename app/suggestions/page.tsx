@@ -6,7 +6,6 @@ import { SuggestionList } from '@/components/suggestions/suggestion-list';
 import { SuggestionFilters } from '@/components/suggestions/suggestion-filters';
 import { SuggestionStats } from '@/components/suggestions/suggestion-stats';
 import { getSuggestions, getSuggestionStats, getSuggestionCategories } from '@/lib/suggestion-service';
-import { Header } from '@radix-ui/react-accordion';
 
 export const metadata: Metadata = {
   title: 'Feature Suggestions & Ideas - Fynorra AI Platform',
@@ -98,7 +97,7 @@ export default async function SuggestionsPage({ searchParams }: SuggestionsPageP
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <Header />
+      <Navbar />
       
       <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}

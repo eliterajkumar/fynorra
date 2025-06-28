@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Header } from '@/components/layout/header';
+import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { SuggestionPost } from '@/components/suggestions/suggestion-post';
 import { RelatedSuggestions } from '@/components/suggestions/related-suggestions';
@@ -87,7 +87,7 @@ export default async function SuggestionPage({ params }: SuggestionPageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <Header />
+      <Navbar />
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">

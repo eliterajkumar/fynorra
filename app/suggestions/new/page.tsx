@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
-import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
 import { NewSuggestionForm } from '@/components/suggestions/new-suggestion-form';
 import { getSuggestionCategories } from '@/lib/suggestion-service';
+import { Navbar } from '@/components/layout/navbar';
+import { Footer } from '@/components/layout/footer';
 
 export const metadata: Metadata = {
   title: 'Submit New Feature Suggestion - Fynorra AI Platform',
@@ -60,7 +60,7 @@ export default async function NewSuggestionPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <Header />
+      <Navbar />
       
       <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}
