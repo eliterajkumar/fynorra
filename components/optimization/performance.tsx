@@ -4,22 +4,52 @@ import React, { useEffect } from 'react';
 
 export function PerformanceOptimizer() {
   useEffect(() => {
-    // Preload critical resources
-    const preloadCriticalResources = () => {
-      const criticalResources = [
-        '/fynorra-demo.mp4',
-        '/video-poster.jpg',
-        '/logo.png'
-      ];
+    // Preload critical assets
+    const criticalAssets = [
+      '/logo.jpeg',
+      '/placeholder-logo.png',
+    ];
 
-      criticalResources.forEach(resource => {
-        const link = document.createElement('link');
-        link.rel = 'preload';
-        link.as = resource.endsWith('.mp4') ? 'video' : 'image';
-        link.href = resource;
-        document.head.appendChild(link);
+    criticalAssets.forEach(asset => {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = asset;
+      document.head.appendChild(link);
+    });
+
+    // Preload critical fonts
+    const fontLinks = document.querySelectorAll('link[rel="preload"][as="font"]');
+    fontLinks.forEach(link => {
+      link.setAttribute('crossorigin', '');
+    });
+
+    // Optimize images
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+      if (!img.loading) {
+        img.loading = 'lazy';
+      }
+    });
+
+    // Add intersection observer for lazy loading
+    if ('IntersectionObserver' in window) {
+      const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target as HTMLImageElement;
+            if (img.dataset.src) {
+              img.src = img.dataset.src;
+              img.removeAttribute('data-src');
+              observer.unobserve(img);
+            }
+          }
+        });
       });
-    };
+
+      const lazyImages = document.querySelectorAll('img[data-src]');
+      lazyImages.forEach(img => imageObserver.observe(img));
+    }
 
     // Preconnect to external domains
     const preconnectToExternalDomains = () => {
@@ -35,23 +65,6 @@ export function PerformanceOptimizer() {
         link.href = domain;
         document.head.appendChild(link);
       });
-    };
-
-    // Optimize images with lazy loading
-    const optimizeImages = () => {
-      const images = document.querySelectorAll('img[data-src]');
-      const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const img = entry.target as HTMLImageElement;
-            img.src = img.dataset.src || '';
-            img.classList.remove('lazy');
-            observer.unobserve(img);
-          }
-        });
-      });
-
-      images.forEach(img => imageObserver.observe(img));
     };
 
     // Optimize videos
@@ -71,9 +84,7 @@ export function PerformanceOptimizer() {
     };
 
     // Initialize optimizations
-    preloadCriticalResources();
     preconnectToExternalDomains();
-    optimizeImages();
     optimizeVideos();
 
     // Cleanup function

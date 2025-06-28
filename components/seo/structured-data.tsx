@@ -4,7 +4,7 @@ export function StructuredData() {
     "@type": "Organization",
     "name": "Fynorra",
     "url": "https://www.fynorra.com",
-    "logo": "https://www.fynorra.com/logo.png",
+    "logo": "https://www.fynorra.com/logo.jpeg",
     "description": "Fynorra helps businesses automate and grow with tailored AI chatbots, custom LLMs, software development, and scalable DevOps solutions.",
     "foundingDate": "2023",
     "address": {

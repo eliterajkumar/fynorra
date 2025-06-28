@@ -10,7 +10,13 @@ export const metadata: Metadata = {
 export default function SignUpPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#101820] to-[#1e1e2f] p-4">
-      <SignUp path="/sign-up" routing="path" signInUrl="/sign-in" />
+      <SignUp 
+        path="/sign-up" 
+        routing="path" 
+        signInUrl="/sign-in"
+        redirectUrl="/dashboard"
+        afterSignUpUrl="/dashboard"
+      />
     </div>
   );
 }

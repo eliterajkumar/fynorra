@@ -62,7 +62,7 @@ export function HeroSection() {
                   loop
                   playsInline
                   className="w-full"
-                  poster="/video-poster.jpg"
+                  poster="/placeholder.jpg"
                   preload="metadata"
                 >
                   <source src="/fynorra-demo.mp4" type="video/mp4" />

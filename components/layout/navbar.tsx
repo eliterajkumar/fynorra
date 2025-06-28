@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import {
   Menu, X, ChevronDown, LogIn, UserPlus, Briefcase,
-  BookOpen, BrainCircuit, Cloud, Code
+  BookOpen, BrainCircuit, Cloud, Code, User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { SignInButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 
 const navLinkClass = "text-sm font-medium text-slate-200 hover:text-primary transition-colors";
 const mobileNavLinkClass = "text-lg font-medium text-slate-50 hover:text-primary transition-colors py-2 block";
@@ -21,6 +21,7 @@ const mobileNavLinkClass = "text-lg font-medium text-slate-50 hover:text-primary
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isSignedIn } = useUser();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -101,12 +102,15 @@ export function Navbar() {
         <Link href="/sign-up">
           <Button size="lg" className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setMobileMenuOpen(false)}>Get Started</Button>
         </Link>
-        <SignInButton mode="modal" fallbackRedirectUrl="/">
+        <SignInButton mode="modal" fallbackRedirectUrl="/dashboard">
           <Button variant="outline" size="lg" className="w-full border-slate-700 text-slate-200 hover:bg-slate-700" onClick={() => setMobileMenuOpen(false)}>Sign In</Button>
         </SignInButton>
       </SignedOut>
       <SignedIn>
-        <UserButton afterSignOutUrl="/" />
+        <Link href="/dashboard" className="flex items-center gap-2 text-slate-200 hover:text-primary transition-colors py-2">
+          <User className="w-5 h-5" />
+          Dashboard
+        </Link>
       </SignedIn>
     </div>
   );
@@ -115,7 +119,7 @@ export function Navbar() {
     <header className={cn("fixed top-0 left-0 right-0 z-50 transition-all duration-300", isScrolled ? "bg-slate-900/80 backdrop-blur-md shadow-lg" : "bg-transparent")}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
-          <Link href="/" className="flex items-center">
+          <Link href={isSignedIn ? "/dashboard" : "/"} className="flex items-center">
             <Image src="/logo.jpeg" alt="FYNORRA Logo" width={40} height={40} className="mr-2 rounded-full" />
           </Link>
 
@@ -130,12 +134,17 @@ export function Navbar() {
               <Link href="/sign-up">
                 <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Get Started</Button>
               </Link>
-              <SignInButton mode="modal" fallbackRedirectUrl="/">
+              <SignInButton mode="modal" fallbackRedirectUrl="/dashboard">
                 <Button variant="outline" className="border-slate-700 text-slate-200 hover:bg-slate-800 hover:text-primary">Sign In</Button>
               </SignInButton>
             </SignedOut>
             <SignedIn>
-              <UserButton afterSignOutUrl="/" />
+              <Link href="/dashboard">
+                <Button variant="outline" className="border-slate-700 text-slate-200 hover:bg-slate-800 hover:text-primary">
+                  <User className="w-4 h-4 mr-2" />
+                  Dashboard
+                </Button>
+              </Link>
             </SignedIn>
           </div>
 
@@ -150,7 +159,7 @@ export function Navbar() {
               </SheetTrigger>
               <SheetContent side="right" className="w-full bg-slate-900 p-6 border-l-slate-700">
                 <div className="flex justify-between items-center mb-8">
-                  <Link href="/" className="flex items-center" onClick={() => setMobileMenuOpen(false)}>
+                  <Link href={isSignedIn ? "/dashboard" : "/"} className="flex items-center" onClick={() => setMobileMenuOpen(false)}>
                     <Image src="/logo.jpeg" alt="FYNORRA Logo" width={80} height={80} className="mr-3 rounded-full object-contain" />
                   </Link>
                   <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
