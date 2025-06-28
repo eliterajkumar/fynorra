@@ -24,12 +24,18 @@ export function BlogCard({ post }: BlogCardProps) {
       {/* Cover Image */}
       <div className="relative overflow-hidden rounded-t-lg">
         <Image
-          src={post.coverImage}
+          src={post.coverImage || '/placeholder.jpg'}
           alt={post.title}
           width={400}
           height={250}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
           priority={post.featured}
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            if (target.src !== window.location.origin + '/placeholder.jpg') {
+              target.src = '/placeholder.jpg';
+            }
+          }}
         />
         {post.featured && (
           <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground">
