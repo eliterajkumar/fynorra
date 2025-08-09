@@ -26,13 +26,11 @@ export function Navbar() {
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
-    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const NavLinksContent = ({ isMobile = false }: { isMobile?: boolean }) => (
     <>
-      {/* WHAT WE DO */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className={cn(isMobile ? mobileNavLinkClass : navLinkClass, "flex items-center gap-1")}>
@@ -62,7 +60,6 @@ export function Navbar() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* RESOURCES */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className={cn(isMobile ? mobileNavLinkClass : navLinkClass, "flex items-center gap-1")}>
@@ -87,7 +84,6 @@ export function Navbar() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* LINKS */}
       <Link href="/for-businesses" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>For Businesses</Link>
       <Link href="/about-us" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>About Us</Link>
       <Link href="/pricing" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>Pricing</Link>
@@ -119,8 +115,9 @@ export function Navbar() {
     <header className={cn("fixed top-0 left-0 right-0 z-50 transition-all duration-300", isScrolled ? "bg-slate-900/80 backdrop-blur-md shadow-lg" : "bg-transparent")}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
+          {/* Desktop Logo - Bigger */}
           <Link href={isSignedIn ? "/dashboard" : "/"} className="flex items-center">
-            <Image src="/logo.jpeg" alt="FYNORRA Logo" width={40} height={40} className="mr-2 rounded-full" />
+            <Image src="/logo.jpeg" alt="FYNORRA Logo" width={130} height={110} className="mr-3 rounded-full" />
           </Link>
 
           {/* Desktop Nav */}
@@ -128,7 +125,7 @@ export function Navbar() {
             <NavLinksContent />
           </nav>
 
-          {/* Auth Buttons */}
+          {/* Desktop Auth */}
           <div className="hidden md:flex items-center gap-x-4">
             <SignedOut>
               <Link href="/sign-up">
@@ -153,17 +150,22 @@ export function Navbar() {
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
-                  <Menu className="h-6 w-6 text-slate-50" />
-                  <span className="sr-only">Open menu</span>
+                  <Menu className="h-7 w-7 text-slate-50" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-full bg-slate-900 p-6 border-l-slate-700">
+
+              <SheetContent side="right" className="w-full bg-slate-900 p-6 border-l border-slate-700">
                 <div className="flex justify-between items-center mb-8">
                   <Link href={isSignedIn ? "/dashboard" : "/"} className="flex items-center" onClick={() => setMobileMenuOpen(false)}>
-                    <Image src="/logo.jpeg" alt="FYNORRA Logo" width={80} height={80} className="mr-3 rounded-full object-contain" />
+                    <Image src="/logo.jpeg" alt="FYNORRA Logo" width={100} height={100} className="mr-4 rounded-full object-contain" />
                   </Link>
-                  <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
-                    <X className="h-6 w-6 text-slate-50" />
+
+                  <Button
+                    variant="ghost"
+                    className="w-12 h-12 p-0 flex items-center justify-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <X className="h-8 w-8 text-slate-50" />
                     <span className="sr-only">Close menu</span>
                   </Button>
                 </div>
