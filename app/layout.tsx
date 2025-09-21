@@ -6,7 +6,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { StructuredData } from "@/components/seo/structured-data";
 import { PerformanceOptimizer } from "@/components/optimization/performance";
 // Removed: import { dark } from '@clerk/themes';
-
+import FloatingChat from "@/components/FloatingChat";
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
@@ -99,6 +99,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    <>
     <ClerkProvider
       publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
       appearance={{
@@ -132,5 +133,7 @@ export default function RootLayout({
         </body>
       </html>
     </ClerkProvider>
+    <FloatingChat />
+    </>
   );
 }

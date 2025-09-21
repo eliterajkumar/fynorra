@@ -60,12 +60,14 @@ export function Navbar() {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Resources dropdown (kept minimal, uncomment trigger in future if needed) */}
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+        {/* If you want a visible trigger for Resources re-enable below block */}
+        {/* <DropdownMenuTrigger asChild>
           <button className={cn(isMobile ? mobileNavLinkClass : navLinkClass, "flex items-center gap-1")}>
             Resources <ChevronDown className={cn("h-4 w-4", isMobile && "h-5 w-5")} />
           </button>
-        </DropdownMenuTrigger>
+        </DropdownMenuTrigger> */}
         <DropdownMenuContent
           align="start"
           sideOffset={6}
@@ -94,6 +96,8 @@ export function Navbar() {
   const MobileNavLinks = () => (
     <div className="flex flex-col gap-4 mt-8">
       <NavLinksContent isMobile />
+      {/* Commented auth area — keep for future */}
+      {/*
       <SignedOut>
         <Link href="/sign-up">
           <Button size="lg" className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setMobileMenuOpen(false)}>Get Started</Button>
@@ -108,25 +112,31 @@ export function Navbar() {
           Dashboard
         </Link>
       </SignedIn>
+      */}
     </div>
   );
 
   return (
     <header className={cn("fixed top-0 left-0 right-0 z-50 transition-all duration-300", isScrolled ? "bg-slate-900/80 backdrop-blur-md shadow-lg" : "bg-transparent")}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-20 items-center justify-between">
-          {/* Desktop Logo - Bigger */}
-          <Link href={isSignedIn ? "/dashboard" : "/"} className="flex items-center">
-            <Image src="/logo.jpeg" alt="FYNORRA Logo" width={130} height={110} className="mr-3 rounded-full" />
-          </Link>
+        {/* Parent row relative so nav can be absolutely centered */}
+        <div className="relative flex h-20 items-center justify-between">
+          {/* Left: Logo */}
+          <div className="flex items-center z-30">
+            <Link href={isSignedIn ? "/dashboard" : "/"} className="flex items-center">
+              <Image src="/logo.jpeg" alt="FYNORRA Logo" width={130} height={110} className="mr-3 rounded-full object-contain" />
+            </Link>
+          </div>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center space-x-6">
+          {/* Center: Nav (absolute center on md+) */}
+          <nav className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center space-x-6 z-20">
             <NavLinksContent />
           </nav>
 
-          {/* Desktop Auth */}
-          <div className="hidden md:flex items-center gap-x-4">
+          {/* Right: placeholder for auth/actions (kept commented for now) */}
+          <div className="hidden md:flex items-center space-x-4 z-30">
+            {/* Uncomment and customize when enabling auth/buttons */}
+            {/*
             <SignedOut>
               <Link href="/sign-up">
                 <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Get Started</Button>
@@ -143,10 +153,11 @@ export function Navbar() {
                 </Button>
               </Link>
             </SignedIn>
+            */}
           </div>
 
           {/* Mobile Menu */}
-          <div className="md:hidden">
+          <div className="md:hidden z-40">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -169,6 +180,7 @@ export function Navbar() {
                     <span className="sr-only">Close menu</span>
                   </Button>
                 </div>
+
                 <MobileNavLinks />
               </SheetContent>
             </Sheet>
@@ -178,3 +190,6 @@ export function Navbar() {
     </header>
   );
 }
+
+
+export default Navbar;

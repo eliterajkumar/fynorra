@@ -5,7 +5,6 @@ import { ServicesSection } from "@/components/sections/services-section";
 import { PricingSection } from "@/components/sections/pricing-section";
 import { FAQSection } from "@/components/sections/faq-section";
 import { Footer } from "@/components/layout/footer";
-
 export default async function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
