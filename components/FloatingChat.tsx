@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import AvatarSVG from "@/components/ui/AvatarSVG"; // keep your avatar component
 import { Paperclip, SendHorizonal, X } from "lucide-react";
 
-const BACKEND_CHAT = process.env.NEXT_PUBLIC_BACKEND_URL || "https://showcase-eliterajkumar-dev.apps.rm3.7wse.p1.openshiftapps.com/rag/chat";
+const BACKEND_CHAT = process.env.NEXT_PUBLIC_BACKEND_URL || "https://fynorra.onrender.com/rag/chat";
 // derived upload url (backend should support /upload or fallback will use /chat with upload_only)
 const BACKEND_UPLOAD = BACKEND_CHAT.replace("/chat", "/upload");
 
