@@ -1,0 +1,82 @@
+{
+  "placeholderImages": [
+    {
+      "id": "fynorra-hero",
+      "description": "AI assistant in a luxury setting, representing Fynorra's premium service.",
+      "imageUrl": "https://images.unsplash.com/photo-1757361414781-dfa67c106aa6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxBSSUyMGFzc2lzdGFudCUyMGpld2Vscnl8ZW58MHx8fHwxNzU4NzkyMDA1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "AI assistant jewelry"
+    },
+    {
+      "id": "jewelry",
+      "description": "A close-up of a diamond ring, representing the jewelry sales assistant demo.",
+      "imageUrl": "https://images.unsplash.com/photo-1629201688908-a4e75b6444e7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxqZXdlbHJ5JTIwZGlhbW9uZHxlbnwwfHx8fDE3NTg3OTIwMDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "jewelry diamond"
+    },
+    {
+      "id": "storefront",
+      "description": "A modern storefront, representing the storefront FAQ demo.",
+      "imageUrl": "https://images.unsplash.com/photo-1691926495391-73c7cb90418a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8c3RvcmVmcm9udCUyMGhlbHB8ZW58MHx8fHwxNzU4NzkyMDA1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "storefront help"
+    },
+    {
+      "id": "restaurant",
+      "description": "A cozy restaurant interior.",
+      "imageUrl": "https://images.unsplash.com/photo-1729394405518-eaf2a0203aa7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxyZXN0YXVyYW50JTIwaW50ZXJpb3J8ZW58MHx8fHwxNzU4NzA5NzM4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "restaurant interior"
+    },
+    {
+      "id": "realestate",
+      "description": "A modern house exterior.",
+      "imageUrl": "https://images.unsplash.com/photo-1531971589569-0d9370cbe1e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtb2Rlcm4lMjBob3VzZXxlbnwwfHx8fDE3NTg3NzIyODN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "modern house"
+    },
+    {
+      "id": "dental",
+      "description": "A clean, modern dental clinic room.",
+      "imageUrl": "https://images.unsplash.com/photo-1643660527098-559f89e45a92?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8ZGVudGFsJTIwY2xpbmljfGVufDB8fHx8MTc1ODcwMTIzOHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "dental clinic"
+    },
+    {
+      "id": "fashion",
+      "description": "A stylishly dressed mannequin in a boutique.",
+      "imageUrl": "https://images.unsplash.com/photo-1726128449240-6569b63355d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxmYXNoaW9uJTIwYm91dGlxdWV8ZW58MHx8fHwxNzU4Nzc0NzM3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fashion boutique"
+    },
+    {
+      "id": "legal",
+      "description": "A law office with books and a gavel.",
+      "imageUrl": "https://images.unsplash.com/photo-1505547828843-176834e42154?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxsYXclMjBvZmZpY2V8ZW58MHx8fHwxNzU4NzUxNDU2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "law office"
+    },
+    {
+      "id": "education",
+      "description": "A stack of textbooks on a desk.",
+      "imageUrl": "https://images.unsplash.com/photo-1613589092961-e917075faa73?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8ZWR1Y2F0aW9uJTIwYm9va3N8ZW58MHx8fHwxNzU4Nzk2NjQ0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "education books"
+    },
+    {
+      "id": "voice-sales",
+      "description": "A person on a phone call in a call center.",
+      "imageUrl": "https://images.unsplash.com/photo-1616587226960-4a03badbe8bf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxzYWxlcyUyMGNhbGx8ZW58MHx8fHwxNzU4Nzk2NjQ0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sales call"
+    },
+    {
+      "id": "facilities",
+      "description": "A maintenance worker with tools.",
+      "imageUrl": "https://images.unsplash.com/photo-1621905251918-48416bd8575a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtYWludGVuYW5jZSUyMHdvcmtlcnxlbnwwfHx8fDE3NTg3OTY2NDR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "maintenance worker"
+    },
+    {
+      "id": "salon-chain",
+      "description": "A modern and chic salon interior.",
+      "imageUrl": "https://images.unsplash.com/photo-1626383137804-ff908d2753a2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxzYWxvbiUyMGludGVyaW9yfGVufDB8fHx8MTc1ODY5NDM0MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "salon interior"
+    },
+    {
+      "id": "urban-salon",
+      "description": "A stylish boutique salon with a minimalist aesthetic.",
+      "imageUrl": "https://images.unsplash.com/photo-1601465939609-dac4f781ff4b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxib3V0aXF1ZSUyMHNhbG9ufGVufDB8fHx8MTc1ODc5ODA3NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "boutique salon"
+    }
+  ]
+}
