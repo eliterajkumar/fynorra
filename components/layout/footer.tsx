@@ -23,9 +23,9 @@ export function Footer() {
           <Link href="/" className="flex items-center mb-4">
   <Image 
     src="/logo.jpeg" // path relative to the /public folder
-    alt="FYNORRA Logo"
-    width={40}
-    height={40}
+    alt="Fynorra AI Solutions PVT LTD"
+    width={50}
+    height={50}
     className="mr-2 rounded-full"
   />
 </Link>
@@ -65,7 +65,7 @@ export function Footer() {
 
         <div className="border-t border-border/20 pt-8 text-center text-foreground/60">
           <p className="flex items-center justify-center">
-            <Copyright className="h-4 w-4 mr-1.5" /> {new Date().getFullYear()} Fynorra. All rights reserved.
+            <Copyright className="h-4 w-4 mr-1.5" /> {new Date().getFullYear()} Fynorra AI Solutions PVT LTD. All rights reserved.
           </p>
         </div>
       </div>

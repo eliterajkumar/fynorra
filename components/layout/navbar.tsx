@@ -124,7 +124,7 @@ export function Navbar() {
           {/* Left: Logo */}
           <div className="flex items-center z-30">
             <Link href={isSignedIn ? "/dashboard" : "/"} className="flex items-center">
-              <Image src="/logo.jpeg" alt="FYNORRA Logo" width={130} height={110} className="mr-3 rounded-full object-contain" />
+              <Image src="/logo.jpeg" alt="Fynorra AI Solutions" width={130} height={110} className="mr-3 rounded-full object-contain" />
             </Link>
           </div>
 
@@ -168,7 +168,7 @@ export function Navbar() {
               <SheetContent side="right" className="w-full bg-slate-900 p-6 border-l border-slate-700">
                 <div className="flex justify-between items-center mb-8">
                   <Link href={isSignedIn ? "/dashboard" : "/"} className="flex items-center" onClick={() => setMobileMenuOpen(false)}>
-                    <Image src="/logo.jpeg" alt="FYNORRA Logo" width={100} height={100} className="mr-4 rounded-full object-contain" />
+                    <Image src="/logo.jpeg" alt="Fynorra AI Assistant" width={100} height={100} className="mr-4 rounded-full object-contain" />
                   </Link>
 
                   <Button
