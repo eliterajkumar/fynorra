@@ -5,7 +5,6 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { BlogPost } from "@/components/blog/blog-post";
 import { RelatedPosts } from "@/components/blog/related-posts";
-import { BlogPostSchema } from "@/components/seo/blog-post-schema";
 import { getBlogPost, getRelatedPosts } from "@/lib/blog-service";
 
 interface BlogPostPageProps {
@@ -73,7 +72,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       
       <main className="flex-grow">
         {/* Blog Post Schema */}
-        <BlogPostSchema post={post} />
         
         {/* Blog Post Content */}
         <BlogPost post={post} />
