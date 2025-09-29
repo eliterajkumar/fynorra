@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Custom AI Solutions & Chatbots for Businesses | Fynorra",
+    default: "Fynorra",
     template: "%s | Fynorra",
   },
   description:

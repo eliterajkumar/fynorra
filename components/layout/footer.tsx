@@ -24,13 +24,13 @@ export function Footer() {
   <Image 
     src="/logo.jpeg" // path relative to the /public folder
     alt="Fynorra AI Solutions PVT LTD"
-    width={50}
-    height={50}
+    width={60}
+    height={60}
     className="mr-2 rounded-full"
   />
 </Link>
             <p className="text-foreground/70 max-w-sm">
-              Empowering businesses with cutting-edge IT software development and custom AI solutions to build the future.
+              Empowering businesses with cutting-edge IT software development and custom AI solutions to build the future With Fynorra
             </p>
           </div>
 

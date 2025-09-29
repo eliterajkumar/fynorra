@@ -4,8 +4,8 @@ import { BlogPost, BlogListResponse, BlogFilters, BlogStats, BlogCategory } from
 const sampleAuthors = [
   {
     id: '1',
-    name: 'Sarah Chen',
-    email: 'sarah@fynorra.com',
+    name: 'Rajkumar',
+    email: 'info@fynorra.com',
     avatar: '/avatars/sarah.jpg',
     bio: 'AI Research Lead at Fynorra',
     role: 'AI Research Lead',

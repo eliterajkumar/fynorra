@@ -50,14 +50,7 @@ const ElegantShape = React.memo(function ElegantShape({
   );
 });
 
-function HeroSection({
-  title1 = "Elevate Your Digital Vision",
-  title2 = "Crafting Exceptional Websites",
-}: {
-  badge?: string;
-  title1?: string;
-  title2?: string;
-}) {
+function HeroSection() {
   const reduceMotion = useReducedMotion();
 
   const fadeUpVariants = useMemo(
@@ -71,6 +64,55 @@ function HeroSection({
     }),
     []
   );
+
+  // JSON-LD: Organization + WebSite
+  // NOTE: best practice = add this JSON-LD server-side in <Head> for immediate indexability.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "name": "Fynorra AI Solutions Pvt Ltd",
+        "url": "https://www.fynorra.com",
+        "logo": "https://www.fynorra.com/logo.png",
+        "sameAs": [
+          "https://www.linkedin.com/company/fynorra-ai",
+          "https://twitter.com/fynorra",
+          "https://www.facebook.com/fynorra"
+        ],
+        "contactPoint": [
+          {
+            "@type": "ContactPoint",
+            "telephone": "+91-9352922959",
+            "contactType": "sales",
+            "areaServed": ["IN", "US"]
+          }
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "url": "https://www.fynorra.com",
+        "name": "Fynorra",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://www.fynorra.com/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    ]
+  };
+
+  useEffect(() => {
+    // Insert JSON-LD client-side as fallback (server placement is recommended).
+    const id = "fynorra-jsonld-hero";
+    if (!document.getElementById(id)) {
+      const s = document.createElement("script");
+      s.type = "application/ld+json";
+      s.id = id;
+      s.text = JSON.stringify(jsonLd);
+      document.head.appendChild(s);
+    }
+  }, []);
 
   return (
     <section
@@ -109,22 +151,6 @@ function HeroSection({
               gradient="from-violet-500/[0.12]"
               className="left-[5%] md:left-[10%] bottom-[6%] md:bottom-[10%]"
             />
-            <ElegantShape
-              delay={0.62}
-              width={200}
-              height={60}
-              rotate={20}
-              gradient="from-amber-500/[0.12]"
-              className="right-[15%] md:right-[20%] top-[10%] md:top-[15%]"
-            />
-            <ElegantShape
-              delay={0.7}
-              width={150}
-              height={40}
-              rotate={-25}
-              gradient="from-cyan-500/[0.12]"
-              className="left-[20%] md:left-[25%] top-[5%] md:top-[10%]"
-            />
           </>
         )}
       </div>
@@ -133,56 +159,58 @@ function HeroSection({
       <div className="relative z-10 container mx-auto px-4 md:px-6">
         <div className="max-w-3xl mx-auto text-center">
           <motion.div custom={1} variants={fadeUpVariants} initial="hidden" animate="visible">
+            {/* H1: Brand-first, keyword-rich */}
             <h1 className="font-bold mb-4 md:mb-6 tracking-tight" style={{ lineHeight: 1.02 }}>
               <span
                 className="block bg-clip-text text-transparent"
                 style={{
-                  backgroundImage: "linear-gradient(to bottom, #fff, rgba(255,255,255,0.85))",
-                  fontSize: "clamp(2.4rem, 6.5vw, 4.8rem)",
+                  backgroundImage: "linear-gradient(to bottom, #fff, rgba(255,255,255,0.9))",
+                  fontSize: "clamp(2.2rem, 6.5vw, 4.2rem)",
                 }}
               >
-                Elevate Your Digital Vision
+                Fynorra — AI Assistants for Growing Businesses
               </span>
               <span
                 className="block bg-clip-text text-transparent mt-2"
                 style={{
-                  backgroundImage:
-                    "linear-gradient(90deg,#38bdf8 0%, #fff 45%, #f472b6 100%)",
-                  fontSize: "clamp(1.4rem, 3.5vw, 1.4rem)",
+                  backgroundImage: "linear-gradient(90deg,#38bdf8 0%, #fff 45%, #f472b6 100%)",
+                  fontSize: "clamp(1.1rem, 3.2vw, 1.2rem)",
                 }}
               >
-                AI Solutions • Custom Software • Scalable Automation
+                Custom AI Chatbots • Automation • Scalable Software
               </span>
             </h1>
           </motion.div>
 
           <motion.div custom={2} variants={fadeUpVariants} initial="hidden" animate="visible">
-            <p className="text-base sm:text-lg md:text-xl text-white/50 mb-8 leading-relaxed font-light tracking-wide max-w-2xl mx-auto px-4">
-              We help businesses scale smarter with{" "}
-              <span className="text-white">From Advance AI Assistants</span>,{" "}
-              <span className="text-white">automation to custom software</span>, and{" "}
-              <span className="text-white">and IT consulting  Fynorra delivers smart</span>. scalable solutions that are simple{" "}
-              <span className="text-white">powerful, and reliable.</span>.
+            <p className="text-base sm:text-lg md:text-xl text-white/60 mb-8 leading-relaxed font-light tracking-wide max-w-2xl mx-auto px-4">
+              Fynorra builds production-ready AI assistants, integrations, and automation that cut costs and improve conversions.
+              From hotel booking assistants to real-estate lead qualification and SaaS onboarding — we deliver reliable, secure, and scalable solutions.
             </p>
 
             {/* CTA row */}
             <div className="flex items-center justify-center gap-4">
               <a
                 href="/demo"
+                aria-label="Try Fynorra live demo"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-sky-600 text-white font-medium hover:opacity-95 transition"
               >
                 Try Live Demo
               </a>
               <a
                 href="/contact"
+                aria-label="Get a quote from Fynorra"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-white/[0.06] text-white/90 hover:bg-white/[0.02] transition"
               >
                 Get Quote
               </a>
             </div>
 
-            {/* microcopy */}
-            
+            <p className="text-xs text-white/40 mt-4">
+              Serving India & USA • SOC2 & GDPR ready • Trusted by enterprise teams.
+            </p>
           </motion.div>
         </div>
       </div>
