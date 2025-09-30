@@ -64,9 +64,9 @@ const jsonLd = {
 
 export default function RAGChatbotsPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#1e1e2f] to-[#2a2a4e] text-slate-50">
-      <Navbar />
+    
     <main className="py-12">
+      <Navbar />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -150,8 +150,7 @@ export default function RAGChatbotsPage() {
           </Link>
         </div>
       </section>
+      <Footer/>
     </main>
-    <Footer />
-    </div>
   );
 }
