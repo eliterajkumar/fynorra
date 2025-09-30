@@ -4,7 +4,8 @@ import React, { useEffect } from "react";
 import Head from "next/head";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bot, Zap, Code2, CloudCog, ArrowRight } from "lucide-react";
+import { Bot, Zap, Code2, CloudCog, Speaker, ImageIcon } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -20,49 +21,99 @@ interface Service {
 
 const services: Service[] = [
   {
-    id: "services-ai",
+    id: "ai-consulting",
     icon: Bot,
-    title: "Custom AI Chatbots",
+    title: "AI Consulting & Strategy",
     description:
-      "Fynorra builds intelligent, human-like chatbots that understand context, learn from interactions, and provide 24/7 customer support across channels.",
-    features: ["Natural Language Processing", "Multi-channel Integration", "Custom Training", "Analytics Dashboard"],
-    useCases: ["Customer Service", "Lead Generation", "E-commerce Support", "Healthcare Assistance"],
-    link: "/custom-ai-solutions"
+      "AI adoption roadmaps, feasibility & ROI analysis, and pilot planning to identify high-impact AI use cases.",
+    features: ["Use-case discovery", "ROI analysis", "Pilot scoping", "Vendor selection"],
+    useCases: ["Enterprise transformation", "Pilot & MVP planning", "Vendor selection"],
+    link: "/services/ai-consulting"
   },
   {
-    id: "ai-integration",
-    icon: Zap,
-    title: "AI Integration & Automation",
-    description:
-      "Seamlessly integrate Fynorra AI capabilities into your systems to automate processes, reduce manual work and increase throughput.",
-    features: ["API Integration", "Workflow Automation", "Data Processing", "Real-time Analytics"],
-    useCases: ["Process Automation", "Data Analysis", "Predictive Maintenance", "Quality Control"],
-    link: "/custom-ai-solutions"
-  },
-  {
-    id: "services-dev",
+    id: "llm-nlp",
     icon: Code2,
-    title: "Software Development",
+    title: "Custom LLM & NLP Solutions",
     description:
-      "End-to-end development from web and mobile apps to enterprise platforms — modern, maintainable, and secure.",
-    features: ["Full-stack Development", "Mobile Apps", "API Development", "Legacy Modernization"],
-    useCases: ["Web Applications", "Mobile Solutions", "Enterprise Software", "E-commerce Platforms"],
-    link: "/software-development"
+      "Fine-tune and deploy LLMs (LLaMA, Mistral, Falcon) and build NLP pipelines for domain-specific performance.",
+    features: ["Fine-tuning (LoRA/QLoRA)", "Data curation", "Instruction tuning", "API deployment"],
+    useCases: ["Legal summarization", "Medical QA", "Support automation", "Content moderation"],
+    link: "/services/llm-nlp"
   },
   {
-    id: "services-cloud",
-    icon: CloudCog,
-    title: "Cloud & DevOps",
+    id: "rag-chatbots",
+    icon: Bot,
+    title: "RAG Chatbots",
     description:
-      "Scalable cloud architectures and DevOps practices for reliability, security, and performance at scale.",
-    features: ["Cloud Migration", "CI/CD Pipelines", "Infrastructure as Code", "Monitoring & Security"],
-    useCases: ["Cloud Migration", "DevOps Transformation", "Scalable Infrastructure", "Disaster Recovery"],
-    link: "/cloud-devops"
+      "Retrieval-Augmented Generation chatbots that connect to your documents, databases and knowledge bases for accurate answers.",
+    features: ["Embeddings + Vector DB", "Hybrid semantic search", "Context windows", "Analytics"],
+    useCases: ["Customer support", "Internal knowledge base", "Sales enablement", "Legal Q&A"],
+    link: "/services/rag-chatbots"
+  },
+  {
+    id: "voice-ai",
+    icon: Speaker,
+    title: "Voice & Speech AI",
+    description:
+      "Speech-to-Text, Text-to-Speech, voice cloning and branded voice assistants for immersive voice experiences.",
+    features: ["STT", "TTS", "Voice cloning", "IVR & call managers"],
+    useCases: ["Call centers", "Podcasts & narration", "Accessibility", "Voice assistants"],
+    link: "/services/voice-ai"
+  },
+  {
+    id: "generative-ai",
+    icon: ImageIcon,
+    title: "Generative AI Media",
+    description:
+      "AI-powered image, avatar and video generation for social media, advertising and scalable creative production.",
+    features: ["Text → Image", "Avatar generation", "Video synthesis", "Style transfer"],
+    useCases: ["YouTube automation", "Ad creatives", "Social content at scale", "Brand avatars"],
+    link: "/services/generative-ai"
+  },
+  {
+    id: "machine-learning",
+    icon: Code2,
+    title: "Machine Learning & Analytics",
+    description:
+      "Predictive models, anomaly detection and recommendation systems to turn data into actionable intelligence.",
+    features: ["Forecasting", "Anomaly detection", "Recommendation engines", "BI dashboards"],
+    useCases: ["Inventory forecasting", "Fraud detection", "Churn prediction", "Personalization"],
+    link: "/services/machine-learning"
+  },
+  {
+    id: "content-automation",
+    icon: Zap,
+    title: "Content & Social Media Automation",
+    description:
+      "Automate content pipelines for YouTube and social: script → voice → video → publish, plus cross-posting and analytics.",
+    features: ["Script generation", "Auto-editing", "Scheduling", "Analytics & optimization"],
+    useCases: ["Creator automation", "Agency workflows", "Marketing campaigns"],
+    link: "/services/generative-ai" // you can change to dedicated page if created
+  },
+  {
+    id: "ai-safety",
+    icon: Bot,
+    title: "AI Safety, Ethics & Auditing",
+    description:
+      "Explainability, bias detection, and compliance audits to ensure safe and trustworthy AI deployments.",
+    features: ["Bias & fairness checks", "Explainable AI", "Compliance reporting", "Audit trails"],
+    useCases: ["Regulated industries", "Model governance", "Third-party audits"],
+    link: "/services/ai-safety" // create this page later or point to /contact
+  },
+  {
+    id: "cloud-aiops",
+    icon: CloudCog,
+    title: "Cloud & AI Ops",
+    description:
+      "Model hosting, scaling, monitoring, drift detection and auto-retraining pipelines. Hybrid cloud & on-prem options.",
+    features: ["Managed hosting", "Monitoring & logging", "Retraining pipelines", "Hybrid deployment"],
+    useCases: ["Production ML systems", "Scalable inference", "Secure on-prem deployments"],
+    link: "/services/cloud-devops"
   },
 ];
 
 export function ServicesSection() {
-  // Client-side JSON-LD injection as fallback. For best SEO, we put JSON-LD into Head on the server page.
+  // Client-side JSON-LD injection as fallback when server-side isn't available.
   useEffect(() => {
     const id = "fynorra-services-jsonld-client";
     if (document.getElementById(id)) return;
@@ -77,7 +128,7 @@ export function ServicesSection() {
         "name": "Fynorra AI Solutions Pvt Ltd",
         "url": "https://www.fynorra.com"
       },
-      "areaServed": ["IN", "US"],
+      "areaServed": ["IN", "US", "GLOBAL"],
       "url": `https://www.fynorra.com${s.link}`
     }));
 
