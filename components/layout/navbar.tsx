@@ -88,7 +88,7 @@ export function Navbar() {
 
       <Link href="/for-businesses" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>For Businesses</Link>
       <Link href="/about-us" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>About Us</Link>
-      <Link href="/pricing" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>Pricing</Link>
+      <Link href="/services" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>Services</Link>
       <Link href="/contact" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>Contact</Link>
     </>
   );
