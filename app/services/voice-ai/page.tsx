@@ -3,7 +3,8 @@ import React from "react";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 export const metadata = {
   title: "Voice & Speech AI – Fynorra",
   description: "Speech-to-text, text-to-speech, voice cloning & branded voice assistants from Fynorra AI Solutions.",
@@ -61,6 +62,8 @@ const jsonLd = {
 
 export default function VoiceAIPage() {
   return (
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#1e1e2f] to-[#2a2a4e] text-slate-50">
+      <Navbar />
     <main className="py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
@@ -132,5 +135,7 @@ export default function VoiceAIPage() {
         </div>
       </section>
     </main>
+    <Footer />
+    </div>
   );
 }

@@ -8,6 +8,8 @@ import { Bot, Zap, Code2, CloudCog, Speaker, ImageIcon } from "lucide-react";
 import { ArrowRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 
 interface Service {
   id: string;
@@ -88,7 +90,7 @@ const services: Service[] = [
       "Automate content pipelines for YouTube and social: script → voice → video → publish, plus cross-posting and analytics.",
     features: ["Script generation", "Auto-editing", "Scheduling", "Analytics & optimization"],
     useCases: ["Creator automation", "Agency workflows", "Marketing campaigns"],
-    link: "/services/generative-ai" // you can change to dedicated page if created
+    link: "/services/generative-ai" // change when dedicated page exists
   },
   {
     id: "ai-safety",
@@ -98,7 +100,7 @@ const services: Service[] = [
       "Explainability, bias detection, and compliance audits to ensure safe and trustworthy AI deployments.",
     features: ["Bias & fairness checks", "Explainable AI", "Compliance reporting", "Audit trails"],
     useCases: ["Regulated industries", "Model governance", "Third-party audits"],
-    link: "/services/ai-safety" // create this page later or point to /contact
+    link: "/services/ai-safety" // create this page or point to /contact
   },
   {
     id: "cloud-aiops",
@@ -113,35 +115,35 @@ const services: Service[] = [
 ];
 
 export function ServicesSection() {
-  // Client-side JSON-LD injection as fallback when server-side isn't available.
+  // Client-side JSON-LD injection as fallback.
   useEffect(() => {
     const id = "fynorra-services-jsonld-client";
     if (document.getElementById(id)) return;
 
     const serviceItems = services.map((s) => ({
       "@type": "Service",
-      "serviceType": s.title,
-      "name": s.title,
-      "description": s.description,
-      "provider": {
+      serviceType: s.title,
+      name: s.title,
+      description: s.description,
+      provider: {
         "@type": "Organization",
-        "name": "Fynorra AI Solutions Pvt Ltd",
-        "url": "https://www.fynorra.com"
+        name: "Fynorra AI Solutions Pvt Ltd",
+        url: "https://www.fynorra.com",
       },
-      "areaServed": ["IN", "US", "GLOBAL"],
-      "url": `https://www.fynorra.com${s.link}`
+      areaServed: ["IN", "US", "GLOBAL"],
+      url: `https://www.fynorra.com${s.link}`,
     }));
 
     const catalog = {
       "@context": "https://schema.org",
       "@type": "OfferCatalog",
-      "name": "Fynorra Services",
-      "url": "https://www.fynorra.com/services",
-      "itemListElement": serviceItems.map((item, idx) => ({
+      name: "Fynorra Services",
+      url: "https://www.fynorra.com/services",
+      itemListElement: serviceItems.map((item, idx) => ({
         "@type": "ListItem",
-        "position": idx + 1,
-        "item": item
-      }))
+        position: idx + 1,
+        item,
+      })),
     };
 
     const script = document.createElement("script");
@@ -280,19 +282,19 @@ export default function ServicesPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "name": "Fynorra Services",
-    "description": pageDescription,
-    "url": "https://www.fynorra.com/services",
-    "publisher": {
+    name: "Fynorra Services",
+    description: pageDescription,
+    url: "https://www.fynorra.com/services",
+    publisher: {
       "@type": "Organization",
-      "name": "Fynorra AI Solutions Pvt Ltd",
-      "url": "https://www.fynorra.com"
+      name: "Fynorra AI Solutions Pvt Ltd",
+      url: "https://www.fynorra.com"
     },
-    "mainEntity": services.map((s) => ({
+    mainEntity: services.map((s) => ({
       "@type": "Service",
-      "name": s.title,
-      "description": s.description,
-      "url": `https://www.fynorra.com${s.link}`
+      name: s.title,
+      description: s.description,
+      url: `https://www.fynorra.com${s.link}`
     }))
   };
 
@@ -322,10 +324,11 @@ export default function ServicesPage() {
         <meta name="robots" content="index, follow" />
       </Head>
 
-      <main>
+      <main className="flex flex-col min-h-screen">
+        <Navbar />
         <ServicesSection />
 
-        <section className="py-12 bg-surface">
+        <section className="py-12 bg-surface mt-auto">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h3 className="text-2xl font-semibold mb-4">Ready to transform with AI?</h3>
             <p className="max-w-2xl mx-auto mb-6">Book a free 30-minute consultation. We’ll audit your use case and propose a practical MVP plan.</p>
@@ -338,6 +341,8 @@ export default function ServicesPage() {
             </div>
           </div>
         </section>
+
+        <Footer />
       </main>
     </>
   );
