@@ -12,7 +12,7 @@ export default function FloatingChat() {
   const [open, setOpen] = useState(false);
   const [anim, setAnim] = useState<"idle" | "wave" | "typing">("idle");
   const [messages, setMessages] = useState<Array<{ id: number; sender: "user" | "bot"; text: string }>>([
-    { id: 1, sender: "bot", text: "👋 Namaste! I’m Fynorra AI Assistant — how can I help you today?" },
+    { id: 1, sender: "bot", text: "👋 I’m Fynorra AI Assistant — how can I help you today?" },
   ]);
   const [input, setInput] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -22,19 +22,14 @@ export default function FloatingChat() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
 
-  // open: play wave then idle
+  // open: play wave then idle (no body overflow manipulation -> background scroll allowed)
   useEffect(() => {
     if (open) {
       setAnim("wave");
       const t = setTimeout(() => setAnim("idle"), 1100);
-      // disable body scroll while open
-      document.body.style.overflow = "hidden";
-      return () => {
-        clearTimeout(t);
-        document.body.style.overflow = "";
-      };
+      return () => clearTimeout(t);
     } else {
-      document.body.style.overflow = "";
+      setAnim("idle");
     }
   }, [open]);
 
@@ -161,25 +156,27 @@ export default function FloatingChat() {
 
   return (
     <>
-      {/* Floating button */}
-      <div style={{ position: "fixed", right: 18, bottom: 18, zIndex: 9999 }}>
-        <button
-          aria-label={open ? "Close chat" : "Open chat"}
-          onClick={() => setOpen((s) => !s)}
-          className="rounded-full shadow-xl"
-          style={{
-            width: 64,
-            height: 64,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "linear-gradient(135deg,#062b3a,#07333f)",
-            border: "1px solid rgba(255,255,255,0.03)",
-          }}
-        >
-          <AvatarSVG state={anim} size={52} />
-        </button>
-      </div>
+      {/* Floating button - now hidden when open */}
+      {!open && (
+        <div style={{ position: "fixed", right: 18, bottom: 18, zIndex: 9999 }}>
+          <button
+            aria-label="Open chat"
+            onClick={() => setOpen(true)}
+            className="rounded-full shadow-xl"
+            style={{
+              width: 64,
+              height: 64,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "linear-gradient(135deg,#062b3a,#07333f)",
+              border: "1px solid rgba(255,255,255,0.03)",
+            }}
+          >
+            <AvatarSVG state={anim} size={52} />
+          </button>
+        </div>
+      )}
 
       {/* Overlay chat panel */}
       <div
@@ -195,13 +192,6 @@ export default function FloatingChat() {
           pointerEvents: open ? "auto" : "none",
         }}
       >
-        {/* Desktop / Tablet panel */}
-        <div
-          style={{
-            display: "none",
-          }}
-        />
-
         {/* Mobile & Desktop unified inner container; use media queries below */}
         <div
           className="fynorra-chat-panel"
@@ -232,7 +222,13 @@ export default function FloatingChat() {
               </div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => { setOpen(false); }} aria-label="Close chat" style={{ background: "transparent", border: "none", color: "#9fbfc7" }}>
+              <button
+                onClick={() => {
+                  setOpen(false);
+                }}
+                aria-label="Close chat"
+                style={{ background: "transparent", border: "none", color: "#9fbfc7" }}
+              >
                 <X />
               </button>
             </div>
