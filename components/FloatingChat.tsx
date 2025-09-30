@@ -12,7 +12,7 @@ export default function FloatingChat() {
   const [open, setOpen] = useState(false);
   const [anim, setAnim] = useState<"idle" | "wave" | "typing">("idle");
   const [messages, setMessages] = useState<Array<{ id: number; sender: "user" | "bot"; text: string }>>([
-    { id: 1, sender: "bot", text: "👋 I’m Fynorra AI Assistant — how can I help you today?" },
+    { id: 1, sender: "bot", text: "👋" },
   ]);
   const [input, setInput] = useState("");
   const [file, setFile] = useState<File | null>(null);
