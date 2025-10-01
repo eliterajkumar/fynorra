@@ -42,7 +42,7 @@ export function DemoGrid({ onTryDemo }: DemoGridProps) {
                         </div>
                         
                         <div className="mt-5 border-t border-slate-800 pt-4">
-                           <button onClick={() => onTryDemo(card.id)} className="w-full bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-500 transition-colors">
+                           <button onClick={() => onTryDemo(card.id)} className="w-full bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-500 transition-colors">
                                 {card.happy_flow.final_cta_text}
                             </button>
                         </div>
