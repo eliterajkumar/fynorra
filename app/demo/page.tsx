@@ -11,21 +11,24 @@ import { CtaSection } from '@/components/fynorra/cta-section';
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { InteractiveDemo } from '@/components/fynorra/interactive-demo';
-
+import { CallDemo } from '@/components/fynorra/call-demo';
+import { Phone } from 'lucide-react';
 export default function FynorraLandingPage() {
   const [demoId, setDemoId] = useState<string | null>(null);
 
   const handleTryDemo = (id: string) => {
     setDemoId(id);
   };
-
+const [isCallDemoOpen, setIsCallDemoOpen] = useState(false);
   const handleCloseDemo = () => {
     setDemoId(null);
   }
 
-  function startCall(id: string): void {
-    setDemoId(id);
+  const startCall = (type: string) => {
+    console.log(`Starting ${type} call...`);
+    setIsCallDemoOpen(true);
   }
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Navbar />
@@ -57,6 +60,18 @@ export default function FynorraLandingPage() {
         onOpenChange={(open) => !open && handleCloseDemo()}
         demoId={demoId} 
       />
+            <CallDemo 
+        open={isCallDemoOpen}
+        onOpenChange={setIsCallDemoOpen}
+      />
+      <button
+        onClick={() => startCall("incoming")}
+        className="fixed right-6 bottom-24 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-lg bg-gradient-to-r from-emerald-400 to-cyan-400 text-black font-semibold hover:scale-105 transition-transform"
+        title="Start Live Call Demo with Fynorra AI"
+      >
+        <Phone className="w-5 h-5" />
+        Call Demo
+      </button>
     </div>  
   );
 }
