@@ -23,11 +23,15 @@ export default function FynorraLandingPage() {
     setDemoId(null);
   }
 
+  function startCall(id: string): void {
+    setDemoId(id);
+  }
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Navbar />
       <main className="flex-1">
-        <Hero onTryDemo={() => handleTryDemo("jewelry")} />
+        <Hero onTryDemo={() => startCall("incoming")} />
+
         
         <section id="demos" className="py-12 md:py-24">
           <DemoGrid onTryDemo={handleTryDemo} />

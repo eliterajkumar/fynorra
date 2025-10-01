@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Bot, Cable, ShieldCheck, Zap } from 'lucide-react';
+import { Bot, Cable, Phone, ShieldCheck, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface HeroProps {
@@ -35,7 +35,8 @@ export function Hero({ onTryDemo }: HeroProps) {
                         onClick={onTryDemo} 
                         className="bg-gradient-to-r from-emerald-600 to-indigo-600 text-white font-semibold shadow-lg hover:-translate-y-1 transition-transform duration-200 active:scale-95"
                     >
-                        Try Demo — Live
+                        <Phone className="w-5 h-5 mr-2" />
+                        Call Demo
                     </Button>
                     <Button 
                         size="lg" 
