@@ -4,7 +4,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Bot, Cable, Phone, ShieldCheck, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface HeroProps {
+interface HeroProps {   
   onTryDemo: () => void;
 }
 
