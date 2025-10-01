@@ -1,74 +1,59 @@
+"use server";
 
-'use server';
+import type { VoiceCallOutput } from "@/ai/flows/voice-call-flow";
 
-import { interactiveAIDemo } from '@/ai/flows/interactive-ai-demo';
-import type { InteractiveAIDemoOutput } from '@/ai/flows/interactive-ai-demo';
-// We are replacing the internal voiceCall with a proxy to the Python backend.
-// import { voiceCall, type VoiceCallOutput } from '@/ai/flows/voice-call-flow';
-import type { VoiceCallOutput } from '@/ai/flows/voice-call-flow';
-
-export async function submitQuery(query: string): Promise<InteractiveAIDemoOutput> {
-  if (!query) {
-    return { answer: "Please provide a query." };
-  }
-  try {
-    const result = await interactiveAIDemo({ query });
-    return result;
-  } catch (error) {
-    console.error('Error in AI flow:', error);
-    return { answer: "Sorry, I encountered an error processing your request. Please try again later." };
-  }
-}
-
-/**
- * This function acts as a proxy to your Python voice assistant backend.
- * It takes the audio data from the client, forwards it to your Railway endpoint,
- * and returns the AI's audio response.
- */
 export async function submitAudio(audioDataUri: string): Promise<VoiceCallOutput> {
   if (!audioDataUri) {
     throw new Error("No audio data provided.");
   }
-  
+
   const backendUrl = process.env.PYTHON_VOICE_API_URL;
   if (!backendUrl) {
-    console.error('PYTHON_VOICE_API_URL is not set in the environment variables.');
+    console.error("PYTHON_VOICE_API_URL is not set in the environment variables.");
     throw new Error("Voice assistant backend is not configured.");
   }
 
+  // small timeout
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000); // 30s
+
   try {
-    console.log(`Forwarding audio to: ${backendUrl}`);
-    
-    // Forward the request to your Python backend
-    const response = await fetch(backendUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      // We send the audio in the format your Python backend expects.
-      // Assuming it expects a JSON payload with an "audio" key containing the data URI.
+    // forward to python backend; expect { audio: "data:audio/wav;base64,...", text: "..." }
+    const resp = await fetch(backendUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ audio: audioDataUri }),
+      signal: controller.signal,
     });
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error('Error from Python backend:', response.status, errorBody);
-      throw new Error(`The voice assistant returned an error: ${response.statusText}`);
+    clearTimeout(timeout);
+
+    if (!resp.ok) {
+      const text = await resp.text();
+      console.error("Error from Python backend:", resp.status, text);
+      throw new Error(`Voice backend error: ${resp.status} ${resp.statusText}`);
     }
 
-    // Assuming your backend returns a JSON object with a field `audio`
-    // containing the base64 encoded WAV audio data URI, similar to the original flow's output.
-    const result: VoiceCallOutput = await response.json();
-    
-    // Add a dummy text response if your backend doesn't provide one.
-    if (!result.text) {
-      result.text = "AI is responding...";
+    const result = (await resp.json()) as VoiceCallOutput;
+
+    if (!result || !result.audio) {
+      console.error("Invalid response from voice backend:", result);
+      throw new Error("Invalid response from voice backend.");
     }
-    
+
+    // ensure result.audio is a data URI; if backend returns base64 without data-prefix, normalize
+    if (!result.audio.startsWith("data:")) {
+      // assume wav base64 if no prefix
+      result.audio = `data:audio/wav;base64,${result.audio}`;
+    }
+
     return result;
-
-  } catch (error) {
-    console.error('Error proxying voice request to Python backend:', error);
-    throw new Error("Sorry, I encountered an error processing your voice request.");
+  } catch (err: any) {
+    if (err.name === "AbortError") {
+      console.error("submitAudio timeout");
+      throw new Error("Voice backend timed out.");
+    }
+    console.error("submitAudio error:", err);
+    throw new Error(err?.message || "Unknown error forwarding audio to voice backend.");
   }
 }
