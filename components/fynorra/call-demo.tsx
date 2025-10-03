@@ -12,7 +12,7 @@ interface CallDemoProps {
 }
 
 export function CallDemo({ open, onOpenChange }: CallDemoProps) {
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "https://fynorra-ai-system.onrender.com";
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "https://ec7af9d15536.ngrok-free.app ";
   const START_DEMO_URL = `${API_BASE}/api/start_demo`;
   const VOICE_STREAM_URL = `${API_BASE}/voice/stream`;
   const VOICE_STREAM_END = `${VOICE_STREAM_URL}/end`;
@@ -235,4 +235,4 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
       </DialogContent>
     </Dialog>
   );
-}
+} 
