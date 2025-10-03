@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { PhoneOff, Mic, Loader2, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/**
+/**     
  * NEW behavior:
  * - When dialog opens -> request mic -> start MediaRecorder with timeslice (e.g. 900ms)
  * - ondataavailable -> send chunk immediately to backend /voice/stream endpoint
