@@ -12,15 +12,20 @@ interface CallDemoProps {
 }
 
 export function CallDemo({ open, onOpenChange }: CallDemoProps) {
-  const [isStreaming, setIsStreaming] = useState(false);
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "https://fynorra-ai-system.onrender.com";
+  const START_DEMO_URL = `${API_BASE}/api/start_demo`;
+  const VOICE_STREAM_URL = `${API_BASE}/voice/stream`;
+  const VOICE_STREAM_END = `${VOICE_STREAM_URL}/end`;
+
+  const [state, setState] = useState<"idle" | "connecting" | "connected">("idle");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [callStatus, setCallStatus] = useState("Connecting...");
+  const [callStatus, setCallStatus] = useState("Ready — click Call Demo");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const sendQueueRef = useRef<Promise<any>>(Promise.resolve());
-  const endpoint = process.env.NEXT_PUBLIC_VOICE_STREAM_URL ?? "/voice/stream";
   const sessionIdRef = useRef<string | null>(null);
+  const gotFirstReplyRef = useRef(false);
 
   const readBlobAsDataURL = (blob: Blob) =>
     new Promise<string>((res, rej) => {
@@ -44,30 +49,38 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
     sendQueueRef.current = sendQueueRef.current.catch(() => {}).then(async () => {
       try {
         const body = { session_id: sessionIdRef.current, chunk: dataUri };
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 25000);
+        const ctrl = new AbortController();
+        const timeout = setTimeout(() => ctrl.abort(), 25000);
         setIsProcessing(true);
-        const resp = await fetch(endpoint, {
+        const resp = await fetch(VOICE_STREAM_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
-          signal: controller.signal,
+          signal: ctrl.signal,
         });
         clearTimeout(timeout);
         if (!resp.ok) {
           const txt = await resp.text().catch(() => "");
           console.warn("stream endpoint error:", resp.status, txt);
+          setCallStatus("Server error while streaming");
           return;
         }
         const json = await resp.json().catch(() => null);
         if (json?.session_id) sessionIdRef.current = json.session_id;
+        if (!gotFirstReplyRef.current && (json?.text || json?.audio)) {
+          gotFirstReplyRef.current = true;
+          setState("connected");
+          setCallStatus(json?.text ?? "Connected — Live");
+        }
         if (json?.audio) await playAudioDataUri(json.audio);
         if (json?.text) setCallStatus(json.text); // Updates to "Hey, how can I help you today?"
       } catch (err: any) {
         if (err.name === "AbortError") {
           console.warn("Chunk send aborted (timeout)");
+          setCallStatus("Network timeout while streaming");
         } else {
           console.error("sendChunk error:", err);
+          setCallStatus("Streaming error");
         }
       } finally {
         setIsProcessing(false);
@@ -76,96 +89,115 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
     return sendQueueRef.current;
   };
 
-  useEffect(() => {
-    if (open) {
-      setCallStatus("Connecting...");
-      (async () => {
-        try {
-          // Initialize session with backend
-          const sessionResp = await fetch(endpoint + "/session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_name: "demo" }),
-          });
-          const sessionJson = await sessionResp.json();
-          sessionIdRef.current = sessionJson.session_id;
-
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          streamRef.current = stream;
-          const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-            ? "audio/webm;codecs=opus"
-            : MediaRecorder.isTypeSupported("audio/webm")
-            ? "audio/webm"
-            : "audio/ogg;codecs=opus";
-
-          const recorder = new MediaRecorder(stream, { mimeType: mime });
-          mediaRecorderRef.current = recorder;
-
-          recorder.onstart = () => {
-            setIsStreaming(true);
-            setCallStatus("Live — you are connected");
-          };
-
-          recorder.ondataavailable = async (ev: BlobEvent) => {
-            if (!ev.data || ev.data.size === 0) return;
-            try {
-              const dataUri = await readBlobAsDataURL(ev.data);
-              sendChunk(dataUri);
-            } catch (e) {
-              console.error("Failed reading chunk:", e);
-            }
-          };
-
-          recorder.onerror = (e) => {
-            console.error("recorder error", e);
-          };
-
-          recorder.start(900);
-        } catch (err) {
-          console.error("mic access or session failed:", err);
-          setCallStatus("Microphone access denied or session failed. Please try again.");
-        }
-      })();
-    } else {
-      setCallStatus("Disconnected");
-      setIsStreaming(false);
-      setIsProcessing(false);
-      try {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-          mediaRecorderRef.current.stop();
-        }
-      } catch {}
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop());
+  const createSessionOnServer = async () => {
+    setCallStatus("Creating session...");
+    setState("connecting");
+    try {
+      const res = await fetch(START_DEMO_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "WebUser", phone: "0000000000", email: "web@demo.local", consent: true }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setCallStatus(j?.detail || j?.error || "Failed to create session");
+        setState("idle");
+        return null;
       }
-      mediaRecorderRef.current = null;
-      streamRef.current = null;
-      sendQueueRef.current = sendQueueRef.current.catch(() => {});
-      sessionIdRef.current = null;
+      if (j?.session_id) {
+        sessionIdRef.current = j.session_id;
+        setCallStatus("Connecting...");
+        return j.session_id;
+      }
+      setCallStatus("No session returned");
+      setState("idle");
+      return null;
+    } catch (err) {
+      console.error("createSession error", err);
+      setCallStatus("Network error: cannot create session");
+      setState("idle");
+      return null;
     }
+  };
 
-    return () => {
-      try {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") mediaRecorderRef.current.stop();
-      } catch {}
-      if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
-      mediaRecorderRef.current = null;
-      streamRef.current = null;
-    };
-  }, [open]);
+  const startCall = async () => {
+    if (state === "connecting" || state === "connected") return;
+    gotFirstReplyRef.current = false;
+    const sid = await createSessionOnServer();
+    if (!sid) return;
 
-  const handleEndCall = async () => {
+    try {
+      setCallStatus("Requesting microphone...");
+      const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = localStream;
+      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+        ? "audio/webm"
+        : "audio/ogg;codecs=opus";
+
+      const recorder = new MediaRecorder(localStream, { mimeType: mime });
+      mediaRecorderRef.current = recorder;
+
+      recorder.onstart = () => {
+        setCallStatus("Connecting...");
+      };
+
+      recorder.ondataavailable = async (ev: BlobEvent) => {
+        if (!ev.data || ev.data.size === 0) return;
+        try {
+          const dataUri = await readBlobAsDataURL(ev.data);
+          sendChunk(dataUri);
+        } catch (e) {
+          console.error("Failed reading chunk:", e);
+        }
+      };
+
+      recorder.onerror = (e) => {
+        console.error("recorder error", e);
+        setCallStatus("Microphone error");
+      };
+
+      recorder.start(900);
+    } catch (err) {
+      console.error("mic access failed:", err);
+      setCallStatus("Microphone access denied. Allow mic and click Call Demo again.");
+      setState("idle");
+    }
+  };
+
+  const stopCall = async () => {
+    try {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") mediaRecorderRef.current.stop();
+    } catch {}
+    if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
+    mediaRecorderRef.current = null;
+    streamRef.current = null;
+
+    await sendQueueRef.current.catch(() => {});
     try {
       if (sessionIdRef.current) {
-        await fetch(endpoint + "/end", {
+        await fetch(VOICE_STREAM_END, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ session_id: sessionIdRef.current }),
         }).catch(() => {});
       }
     } catch {}
-    onOpenChange(false);
+    sessionIdRef.current = null;
+    gotFirstReplyRef.current = false;
+    setState("idle");
+    setCallStatus("Ready — click Call Demo");
   };
+
+  useEffect(() => {
+    if (!open) {
+      stopCall().catch(() => {});
+    }
+    return () => {
+      stopCall().catch(() => {});
+    };
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -187,12 +219,16 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
 
         <div className="flex justify-center items-center gap-4 bg-slate-800/50 p-4 rounded-xl">
           <div className={cn("h-16 w-16 rounded-full bg-slate-700/50 flex items-center justify-center text-white")}>
-            {isStreaming ? <Mic className="h-7 w-7" /> : <Loader2 className="h-7 w-7 animate-spin" />}
+            {state === "connected" ? <Mic className="h-7 w-7" /> : <Loader2 className="h-7 w-7 animate-spin" />}
           </div>
-
-          <Button variant="destructive" size="icon" className="h-16 w-16 rounded-full" onClick={handleEndCall}>
-            <PhoneOff className="h-7 w-7" />
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={startCall} disabled={state === "connecting" || state === "connected"}>
+              Call Demo
+            </Button>
+            <Button variant="destructive" size="icon" className="h-16 w-16 rounded-full" onClick={() => { stopCall().then(() => onOpenChange(false)); }} disabled={state === "idle"}>
+              <PhoneOff className="h-7 w-7" />
+            </Button>
+          </div>
         </div>
 
         <audio ref={audioRef} className="hidden" />
