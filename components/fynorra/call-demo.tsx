@@ -7,15 +7,12 @@ import { PhoneOff, Mic, VolumeX, Volume2, Loader2, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * One-click Call Demo
- * - No form fields (UI simplified)
- * - Click "Call Demo" -> create session -> request mic -> start streaming
- * - Shows "Connecting..." until first backend reply -> then "Connected — Live"
- * - Mute / Unmute toggles sending of audio (keeps mic open)
- * - End call stops session and notifies backend
- * - Attempts a single automatic recorder restart if the recorder unexpectedly stops
+ * One-click Call Demo (minimal):
+ * - Click "Call Demo" -> Connecting...
+ * - When backend sends first text (e.g. "Hey — how can I help you today") -> show that text and mark Connected
+ * - Buttons: Call Demo, Mute/Unmute, End Call
  *
- * Make sure NEXT_PUBLIC_API_BASE is set: e.g. http://127.0.0.1:8001
+ * Set NEXT_PUBLIC_API_BASE in .env.local
  */
 
 interface CallDemoProps {
@@ -29,7 +26,7 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
   const VOICE_STREAM_URL = `${API_BASE}/voice/stream`;
   const VOICE_STREAM_END = `${VOICE_STREAM_URL}/end`;
 
-  const [state, setState] = useState<"idle" | "creating" | "connecting" | "connected" | "ended">("idle");
+  const [state, setState] = useState<"idle" | "connecting" | "connected">("idle");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [callStatus, setCallStatus] = useState("Ready — click Call Demo");
@@ -39,9 +36,8 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
   const sendQueueRef = useRef<Promise<any>>(Promise.resolve());
   const sessionIdRef = useRef<string | null>(null);
   const gotFirstReplyRef = useRef(false);
-  const restartAttemptRef = useRef(false); // allow one automatic restart
 
-  // helper to read Blob -> data URI
+  // convert blob to dataURI
   const readBlobAsDataURL = (blob: Blob) =>
     new Promise<string>((res, rej) => {
       const fr = new FileReader();
@@ -60,13 +56,13 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
     }
   };
 
-  // sequential send queue to keep ordering
+  // sequential send to avoid parallel requests
   const sendChunk = async (dataUri: string) => {
     sendQueueRef.current = sendQueueRef.current
       .catch(() => {})
       .then(async () => {
         try {
-          if (isMuted) return; // if muted, do not send audio
+          if (isMuted) return; // do not send when muted
           const body = { session_id: sessionIdRef.current, chunk: dataUri };
           const ctrl = new AbortController();
           const timeout = setTimeout(() => ctrl.abort(), 25000);
@@ -85,11 +81,12 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
             return;
           }
           const json = await resp.json().catch(() => null);
+          // backend responds with { session_id?, text?, audio? }
           if (json?.session_id) sessionIdRef.current = json.session_id;
-          if (!gotFirstReplyRef.current && (json?.audio || json?.text)) {
+          if (!gotFirstReplyRef.current && (json?.text || json?.audio)) {
             gotFirstReplyRef.current = true;
             setState("connected");
-            setCallStatus("Connected — Live");
+            setCallStatus(json?.text ?? "Connected — Live");
           }
           if (json?.audio) await playAudioDataUri(json.audio);
           if (json?.text) setCallStatus(json.text);
@@ -108,18 +105,17 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
     return sendQueueRef.current;
   };
 
-  // create session on server
+  // create session before streaming (so lead/session exists server-side)
   const createSessionOnServer = async () => {
     setCallStatus("Creating session...");
-    setState("creating");
+    setState("connecting");
     try {
-      // minimal anonymous lead (you can attach real lead server-side later)
       const res = await fetch(START_DEMO_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: "WebUser", phone: "0000000000", email: "web@demo.local", consent: true }),
       });
-      const j = await res.json();
+      const j = await res.json().catch(() => ({}));
       if (!res.ok) {
         setCallStatus(j?.detail || j?.error || "Failed to create session");
         setState("idle");
@@ -128,7 +124,6 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
       if (j?.session_id) {
         sessionIdRef.current = j.session_id;
         setCallStatus("Connecting...");
-        setState("connecting");
         return j.session_id;
       }
       setCallStatus("No session returned");
@@ -142,37 +137,38 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
     }
   };
 
-  // start media recorder and streaming
-  const startStreaming = async () => {
-    // create session first
+  // start the recorder and streaming (called when user clicks Call Demo)
+  const startCall = async () => {
+    if (state === "connecting" || state === "connected") return;
+    gotFirstReplyRef.current = false;
+    setCallStatus("Creating session...");
     const sid = await createSessionOnServer();
     if (!sid) return;
+
     try {
       setCallStatus("Requesting microphone...");
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-
+      const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = localStream;
       const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
         ? "audio/webm;codecs=opus"
         : MediaRecorder.isTypeSupported("audio/webm")
         ? "audio/webm"
         : "audio/ogg;codecs=opus";
 
-      const recorder = new MediaRecorder(stream, { mimeType: mime });
+      const recorder = new MediaRecorder(localStream, { mimeType: mime });
       mediaRecorderRef.current = recorder;
 
       recorder.onstart = () => {
         setCallStatus("Connecting...");
-        setState("connecting");
       };
 
       recorder.ondataavailable = async (ev: BlobEvent) => {
         if (!ev.data || ev.data.size === 0) return;
         try {
           const dataUri = await readBlobAsDataURL(ev.data);
-          await sendChunk(dataUri);
+          sendChunk(dataUri);
         } catch (e) {
-          console.error("Failed to read chunk:", e);
+          console.error("Failed reading chunk:", e);
         }
       };
 
@@ -181,35 +177,8 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
         setCallStatus("Microphone error");
       };
 
-      recorder.onstop = async () => {
-        console.warn("recorder stopped unexpectedly, state:", state);
-        // If call still active and we haven't already attempted restart, try to restart recorder once
-        if ((state === "connecting" || state === "connected") && !restartAttemptRef.current) {
-          restartAttemptRef.current = true;
-          setCallStatus("Recorder stopped — attempting restart...");
-          // small delay
-          setTimeout(() => {
-            if (streamRef.current && state !== ("ended" as typeof state)) {
-              try {
-                // stop any existing tracks
-                streamRef.current.getTracks().forEach((t) => t.stop());
-              } catch {}
-            }
-            // try to request mic + restart recorder
-            startStreaming().catch(() => {
-              setCallStatus("Failed to restart recorder");
-              setState("idle");
-            });
-          }, 800);
-        } else {
-          // normal stop or already tried restart
-          setState("idle");
-          setCallStatus("Ready — click Call Demo");
-        }
-      };
-
-      // start sending chunks every 900ms
-      recorder.start(900);
+      recorder.start(900); // send every ~900ms
+      // show spinner until first backend reply
       setCallStatus("Connecting...");
       setState("connecting");
     } catch (err) {
@@ -219,26 +188,18 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
     }
   };
 
-  // stop streaming & cleanup
-  const stopStreaming = async () => {
-    setState("ended");
+  const stopCall = async () => {
     try {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-        mediaRecorderRef.current.stop();
-      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") mediaRecorderRef.current.stop();
     } catch {}
-    if (streamRef.current) {
-      try {
-        streamRef.current.getTracks().forEach((t) => t.stop());
-      } catch {}
-    }
+    if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
     mediaRecorderRef.current = null;
     streamRef.current = null;
 
-    // ensure queue drained
+    // drain queue
     await sendQueueRef.current.catch(() => {});
 
-    // call backend end
+    // notify backend
     try {
       if (sessionIdRef.current) {
         await fetch(VOICE_STREAM_END, {
@@ -247,50 +208,27 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
           body: JSON.stringify({ session_id: sessionIdRef.current }),
         }).catch(() => {});
       }
-    } catch (e) {
-      console.warn("end call failed", e);
-    }
-
+    } catch {}
     sessionIdRef.current = null;
     gotFirstReplyRef.current = false;
-    restartAttemptRef.current = false;
     setIsMuted(false);
-    setCallStatus("Ready — click Call Demo");
-    setIsProcessing(false);
     setState("idle");
+    setCallStatus("Ready — click Call Demo");
   };
 
-  // UI handlers
-  const handleCallDemo = async () => {
-    if (state === "connecting" || state === "connected") {
-      // already running
-      return;
-    }
-    gotFirstReplyRef.current = false;
-    restartAttemptRef.current = false;
-    await startStreaming();
-  };
+  const toggleMute = () => setIsMuted((m) => !m);
 
-  const handleEndCall = async () => {
-    await stopStreaming();
-    onOpenChange(false);
-  };
-
-  const toggleMute = () => {
-    setIsMuted((m) => !m);
-  };
-
-  // cleanup when modal closes
+  // cleanup on modal close
   useEffect(() => {
     if (!open) {
-      stopStreaming().catch(() => {});
+      stopCall().catch(() => {});
       setCallStatus("Ready — click Call Demo");
     } else {
+      // reset status when opened
       setCallStatus("Ready — click Call Demo");
-      // reset states
       setIsMuted(false);
+      setState("idle");
       gotFirstReplyRef.current = false;
-      restartAttemptRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -319,15 +257,15 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={handleCallDemo} className="px-6 py-2" disabled={state === "connecting" || state === "connected"}>
+            <Button onClick={startCall} className="px-6 py-2" disabled={state === "connecting" || state === "connected"}>
               Call Demo
             </Button>
 
-            <Button onClick={toggleMute} variant="secondary" className="px-4 py-2" disabled={state === "idle" || state === "creating" || state === "ended"}>
+            <Button onClick={toggleMute} variant="secondary" className="px-4 py-2" disabled={state === "idle"}>
               {isMuted ? <VolumeX className="mr-2" /> : <Volume2 className="mr-2" />} {isMuted ? "Unmute" : "Mute"}
             </Button>
 
-            <Button variant="destructive" onClick={handleEndCall} className="px-4 py-2" disabled={state === "idle"}>
+            <Button variant="destructive" onClick={() => { stopCall().then(() => onOpenChange(false)); }} className="px-4 py-2" disabled={state === "idle"}>
               <PhoneOff className="mr-2" /> End Call
             </Button>
           </div>
@@ -335,7 +273,7 @@ export function CallDemo({ open, onOpenChange }: CallDemoProps) {
 
         <div className="text-center text-sm text-slate-400 mt-4">
           <p>{isProcessing ? "Processing..." : ""}</p>
-          <p className="mt-2">Tip: Click Call Demo and speak when you see "Connected — Live".</p>
+          <p className="mt-2">Tip: Click Call Demo then allow microphone. Wait until agent says "Hey — how can I help you today".</p>
         </div>
 
         <audio ref={audioRef} className="hidden" />
