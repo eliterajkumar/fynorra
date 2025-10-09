@@ -96,7 +96,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Button onClick={() => setShowCreate(true)} className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-500 text-white">
+              <Button onClick={() => router.push("/upload")} className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-500 text-white">
                 <Plus size={14} /> Create Assistant
               </Button>
               <UserButton />
