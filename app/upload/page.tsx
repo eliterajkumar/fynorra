@@ -132,7 +132,9 @@ export default function UploadPage() {
       const form = new FormData();
       form.append("file", fileItem.file);
       const xhr = new XMLHttpRequest();
-      xhr.open("POST", `${BASE_URL}/upload_pdf`);
+      xhr.open("POST", `${BASE_URL}/api/upload`);
+      // TODO: Add Supabase JWT token when auth is implemented
+      // xhr.setRequestHeader('Authorization', `Bearer ${supabaseToken}`);
       
       xhr.upload.onprogress = (ev) => {
         if (ev.lengthComputable) {
@@ -145,7 +147,8 @@ export default function UploadPage() {
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const body = JSON.parse(xhr.responseText || "{}");
-            const jobId = body.job_id || body.dataset_id || null;
+            const jobId = body.jobId || body.documentId || null;
+            // Backend returns: { jobId: "job_123", documentId: "doc_456", status: "queued" }
             setFiles((prev) =>
               prev.map((p) => (p.id === fileItem.id ? { ...p, status: "uploaded", progress: 100, jobId } : p))
             );
@@ -185,10 +188,7 @@ export default function UploadPage() {
       toast.error("Add files or scraped URLs before saving");
       return;
     }
-    if (!datasetName.trim()) {
-      toast.error("Please enter a dataset name");
-      return;
-    }
+    // Dataset name not required as backend auto-processes files
     
     setIsUploading(true);
     setBusy(true);
@@ -209,14 +209,14 @@ export default function UploadPage() {
       if (s.status === "saved" && s.jobId) continue;
       if (s.status === "fetched" || s.status === "pending") {
         try {
-          const res = await fetch(`${BASE_URL}/submit_url`, {
+          const res = await fetch(`${BASE_URL}/api/scrape`, {
             method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ url: s.url }),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: s.url }),
           });
           if (!res.ok) throw new Error(`Scrape failed ${res.status}`);
           const data = await res.json();
-          setScraped((prev) => prev.map((x) => (x.id === s.id ? { ...x, status: "saved", jobId: data.job_id || null } : x)));
+          setScraped((prev) => prev.map((x) => (x.id === s.id ? { ...x, status: "saved", jobId: data.jobId || null } : x)));
         } catch (err) {
           setScraped((prev) => prev.map((x) => (x.id === s.id ? { ...x, status: "error" } : x)));
         }
@@ -228,33 +228,20 @@ export default function UploadPage() {
     const url_job_ids = scraped.filter(s => s.jobId).map(s => s.jobId!);
 
     try {
-      const res = await fetch(`${BASE_URL}/datasets`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: datasetName.trim(),
-          file_job_ids,
-          url_job_ids,
-        }),
-      });
+      // Files are auto-processed by backend, no separate dataset creation needed
+      toast.success(`Files uploaded and processing started!`);
+      setFiles([]);
+      setScraped([]);
+      setDatasetName("");
+      setIsUploading(false);
+      setBusy(false);
+      return;
       
-      if (!res.ok) {
-        const text = await res.text();
-        toast.error(`Dataset creation failed: ${res.status}`);
-      } else {
-        const data = await res.json();
-        toast.success(`Dataset "${datasetName}" created successfully!`);
-        // Clear form
-        setFiles([]);
-        setScraped([]);
-        setDatasetName("");
-      }
     } catch (err) {
-      toast.error("Failed to create dataset. Check your backend connection.");
+      toast.error("Failed to process files. Check your backend connection.");
+      setIsUploading(false);
+      setBusy(false);
     }
-
-    setIsUploading(false);
-    setBusy(false);
   }
 
   async function scrapeUrlHandler(e?: React.FormEvent) {
@@ -266,27 +253,25 @@ export default function UploadPage() {
     setBusy(true);
 
     try {
-      const res = await fetch(`${BASE_URL}/submit_url`, {
+      const res = await fetch(`${BASE_URL}/api/scrape`, {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ url: scrapeUrl.trim() }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: scrapeUrl.trim() }),
       });
       if (!res.ok) throw new Error(`Scrape failed: ${res.status}`);
       const data = await res.json();
       const item: ScrapedItem = {
-        id: data.job_id || `s-${Date.now()}`,
+        id: data.jobId || `s-${Date.now()}`,
         url: scrapeUrl,
-        title: data.title || data.source || scrapeUrl,
+        title: data.title || scrapeUrl,
         excerpt: data.excerpt || "",
         status: "saved",
-        jobId: data.job_id || null,
+        jobId: data.jobId || null,
       };
       setScraped((s) => [item, ...s]);
       setScrapeUrl("");
       toast.success("URL scraped successfully");
     } catch (err) {
-      setScraped((s) => [{ id: `s-${Date.now()}`, url: scrapeUrl, title: `Preview: ${scrapeUrl}`, excerpt: "Preview (backend failed)", status: "fetched", jobId: null }, ...s]);
-      setScrapeUrl("");
       toast.error("Failed to scrape URL. Check your backend connection.");
     } finally {
       setBusy(false);

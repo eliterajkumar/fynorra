@@ -28,7 +28,7 @@ import {
 const NAV = [
   { href: "/dashboard", label: "Dashboard", Icon: Home },
   { href: "/upload", label: "Upload Data", Icon: Upload },
-  { href: "/train", label: "Train AI", Icon: Cpu },
+  { href: "/brain", label: "Memory", Icon: Cpu },
   { href: "/playground", label: "Playground", Icon: Play },
   { href: "/deploy", label: "Deploy", Icon: CloudUpload },
   { href: "/docs", label: "Docs", Icon: BookUserIcon },
