@@ -32,7 +32,7 @@ export default function BrainPage() {
   async function fetchDocuments() {
     try {
       setLoading(true);
-      const res = await fetch(`${BASE_URL}/api/brain?limit=50&offset=0`);
+      const res = await fetch(`${BASE_URL}/api/dev/brain?limit=50&offset=0`);
       if (!res.ok) throw new Error(`Failed: ${res.status}`);
       
       const data = await res.json();

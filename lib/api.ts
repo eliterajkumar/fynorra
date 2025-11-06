@@ -1,6 +1,6 @@
 // lib/api.ts
 export const sendMessageToChatbot = async (message: string) => {
-  const response = await fetch("https://c33822360e09.ngrok-free.app/api/query", {
+  const response = await fetch("https://c33822360e09.ngrok-free.app/api/dev/query", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -132,7 +132,7 @@ export default function UploadPage() {
       const form = new FormData();
       form.append("file", fileItem.file);
       const xhr = new XMLHttpRequest();
-      xhr.open("POST", `${BASE_URL}/api/upload`);
+      xhr.open("POST", `${BASE_URL}/api/dev/upload`);
       // TODO: Add Supabase JWT token when auth is implemented
       // xhr.setRequestHeader('Authorization', `Bearer ${supabaseToken}`);
       
@@ -209,7 +209,7 @@ export default function UploadPage() {
       if (s.status === "saved" && s.jobId) continue;
       if (s.status === "fetched" || s.status === "pending") {
         try {
-          const res = await fetch(`${BASE_URL}/api/scrape`, {
+          const res = await fetch(`${BASE_URL}/api/dev/scrape`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ url: s.url }),
@@ -253,7 +253,7 @@ export default function UploadPage() {
     setBusy(true);
 
     try {
-      const res = await fetch(`${BASE_URL}/api/scrape`, {
+      const res = await fetch(`${BASE_URL}/api/dev/scrape`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: scrapeUrl.trim() }),
