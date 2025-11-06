@@ -1,6 +1,6 @@
 // lib/api.ts
 export const sendMessageToChatbot = async (message: string) => {
-  const response = await fetch("http://localhost:8000/chat", {
+  const response = await fetch("https://c33822360e09.ngrok-free.app/chat", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

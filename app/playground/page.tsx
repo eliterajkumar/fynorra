@@ -31,7 +31,7 @@ type Message = {
 };
 
 const STORAGE_KEY = "fynorra_playground_v1";
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8001";
+const BASE_URL = "https://c33822360e09.ngrok-free.app";
 
 export default function PlaygroundPage() {
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -110,11 +110,11 @@ export default function PlaygroundPage() {
   async function sendMessage() {
     const text = input.trim();
     if (!text) return;
-    // require dataset selection for RAG queries
-    if (!datasetId) {
-      alert("Select a dataset in the Train/Upload page first (dataset id required).");
-      return;
-    }
+    // Optional: dataset selection for RAG queries
+    // if (!datasetId) {
+    //   alert("Select a dataset in the Train/Upload page first (dataset id required).");
+    //   return;
+    // }
 
     const userMsg: Message = { id: `u-${Date.now()}`, role: "user", content: text, ts: Date.now() };
     addMessage(userMsg);
@@ -136,53 +136,20 @@ export default function PlaygroundPage() {
       fd.append("assistant_name", assistantName);
       fd.append("question", userMsg.content);
 
-      // POST to playground endpoint. Adjust path if your backend uses /rag_query or /playground/query.
-      const res = await fetch(`${BASE_URL}/playground/query`, {
+      // Try chat endpoint first
+      const res = await fetch(`${BASE_URL}/chat`, {
         method: "POST",
-        body: fd,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMsg.content }),
       });
 
       if (!res.ok) {
-        // fallback: try /rag_query (some earlier code used this)
-        try {
-          const alt = await fetch(`${BASE_URL}/rag_query`, { method: "POST", body: fd });
-          if (alt.ok) {
-            const t = await alt.text();
-            // alt endpoint in earlier sample returned plain stdout — put it into assistant answer
-            removeMessageById(loadingMsg.id);
-            addMessage({ id: `a-${Date.now()}`, role: "assistant", content: t, ts: Date.now() });
-            setAssistantLoading(false);
-            if (mode === "voice" && t) playTTS(t);
-            return;
-          }
-        } catch (e) {
-          console.warn("alternate rag_query failed", e);
-        }
         throw new Error(`Server returned ${res.status}`);
       }
 
-      // parse JSON response
       const j = await res.json();
-
-      // expected shape: { answer: string, sources?: [{ id, text, page, snippet, url }] }
-      let answerText = "";
-      let sources: Citation[] = [];
-
-      if (typeof j === "string") {
-        // some endpoints return plain string
-        answerText = j;
-      } else if (j.answer || j.data || j.result) {
-        // flexible mapping
-        answerText = j.answer || j.data || j.result || "";
-        if (Array.isArray(j.sources)) sources = j.sources;
-        else if (Array.isArray(j.contexts)) sources = j.contexts;
-      } else if (j.choices && Array.isArray(j.choices) && j.choices[0]?.text) {
-        // Llama style
-        answerText = j.choices[0].text;
-      } else {
-        // fallback: stringify
-        answerText = JSON.stringify(j).slice(0, 1000);
-      }
+      let answerText = j.response || j.answer || "No response received";
+      let sources: Citation[] = j.sources || [];
 
       // remove loading message and append actual assistant reply
       removeMessageById(loadingMsg.id);
@@ -286,14 +253,14 @@ export default function PlaygroundPage() {
         <div className="max-w-5xl mx-auto px-6 py-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">🧩 Playground</h1>
-              <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Test your assistant with text or voice. Citations are shown for RAG responses.</p>
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">🧩 AI Chat</h1>
+              <p className="text-gray-600 dark:text-slate-400 mt-2">Chat with your AI assistant powered by your uploaded data</p>
             </div>
 
             <div className="flex items-center gap-3">
-              {/* datasetId + assistant name inputs — user sets which dataset to use & assistant label */}
-              <Input placeholder="Dataset ID (required)" value={datasetId} onChange={(e) => setDatasetId(e.target.value)} style={{ width: 220 }} />
-              <Input placeholder="Assistant name" value={assistantName} onChange={(e) => setAssistantName(e.target.value)} style={{ width: 200 }} />
+              <Button onClick={() => setMessages([])} variant="outline">
+                Clear Chat
+              </Button>
             </div>
           </div>
 

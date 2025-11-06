@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "sonner";
 import { ClerkProvider } from "@clerk/nextjs";
 import { PerformanceOptimizer } from "@/components/optimization/performance";
 import FloatingChat from "@/components/FloatingChat";
@@ -127,6 +128,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
 
           {/* UI helpers */}
           <Toaster />
+          <Sonner position="top-right" richColors />
           <FloatingChat />
         </ClerkProvider>
       </body>

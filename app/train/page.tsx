@@ -35,7 +35,7 @@ type TrainJob = {
   logs: string[];
 };
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8001";
+const BASE_URL = "https://c33822360e09.ngrok-free.app";
 
 export default function TrainPage() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);

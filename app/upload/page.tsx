@@ -5,7 +5,9 @@ import Sidebar from "@/components/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, Link, Trash2, CheckCircle, AlertTriangle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Upload, Link, Trash2, CheckCircle, AlertTriangle, FileText, Globe, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 /**
  * Updated Upload Page (Next.js + .tsx)
@@ -46,16 +48,16 @@ type ScrapedItem = {
   jobId?: string | null; // backend returned job id
 };
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB recommended
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8001";
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const BASE_URL = "https://c33822360e09.ngrok-free.app";
 
 export default function UploadPage() {
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [scrapeUrl, setScrapeUrl] = useState("");
   const [scraped, setScraped] = useState<ScrapedItem[]>([]);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [datasetName, setDatasetName] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const dropRef = useRef<HTMLDivElement | null>(null);
 
@@ -99,12 +101,9 @@ export default function UploadPage() {
       } as UploadFile;
     });
 
-    // Basic type check + warn
     const unsupported = arr.filter((a) => !/\.(pdf|docx?|txt|md|csv|json)$/i.test(a.name));
     if (unsupported.length > 0) {
-      setMessage("Some file types are unusual — processing may fail. Supported: PDF, DOCX, TXT, MD, CSV.");
-    } else {
-      setMessage(null);
+      toast.warning("Some file types may not be supported. Recommended: PDF, DOCX, TXT, MD, CSV");
     }
 
     setFiles((s) => [...arr, ...s]);
@@ -128,29 +127,29 @@ export default function UploadPage() {
     setFiles((s) => s.filter((f) => f.id !== id));
   }
 
-  // Upload single file via XHR to get progress events.
-  // Uses backend: POST ${BASE_URL}/upload_pdf
   function uploadFileToBackend(fileItem: UploadFile) {
     return new Promise<UploadFile>((resolve) => {
       const form = new FormData();
       form.append("file", fileItem.file);
       const xhr = new XMLHttpRequest();
       xhr.open("POST", `${BASE_URL}/upload_pdf`);
+      
       xhr.upload.onprogress = (ev) => {
         if (ev.lengthComputable) {
           const pct = Math.round((ev.loaded / ev.total) * 100);
           setFiles((prev) => prev.map((p) => (p.id === fileItem.id ? { ...p, progress: pct } : p)));
         }
       };
+      
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const body = JSON.parse(xhr.responseText || "{}");
-            // backend should return job_id (we store it)
             const jobId = body.job_id || body.dataset_id || null;
             setFiles((prev) =>
               prev.map((p) => (p.id === fileItem.id ? { ...p, status: "uploaded", progress: 100, jobId } : p))
             );
+            toast.success(`${fileItem.name} uploaded successfully`);
             resolve({ ...fileItem, status: "uploaded", progress: 100, jobId });
           } catch {
             setFiles((prev) =>
@@ -159,51 +158,57 @@ export default function UploadPage() {
             resolve({ ...fileItem, status: "uploaded", progress: 100, jobId: null });
           }
         } else {
+          const error = `Upload failed (${xhr.status})`;
           setFiles((prev) =>
-            prev.map((p) => (p.id === fileItem.id ? { ...p, status: "error", error: `Upload failed (${xhr.status})` } : p))
+            prev.map((p) => (p.id === fileItem.id ? { ...p, status: "error", error } : p))
           );
-          resolve({ ...fileItem, status: "error", error: `Upload failed (${xhr.status})` });
+          toast.error(`Failed to upload ${fileItem.name}`);
+          resolve({ ...fileItem, status: "error", error });
         }
       };
+      
       xhr.onerror = () => {
+        const error = "Network error";
         setFiles((prev) =>
-          prev.map((p) => (p.id === fileItem.id ? { ...p, status: "error", error: "Network error" } : p))
+          prev.map((p) => (p.id === fileItem.id ? { ...p, status: "error", error } : p))
         );
-        resolve({ ...fileItem, status: "error", error: "Network error" });
+        toast.error(`Network error uploading ${fileItem.name}`);
+        resolve({ ...fileItem, status: "error", error });
       };
+      
       xhr.send(form);
     });
   }
 
-  // Upload all pending files + save scraped items by sending them to backend.
-  // Also collects returned job_ids so we can create a dataset.
   async function saveDataset() {
     if (files.length === 0 && scraped.length === 0) {
-      setMessage("Add files or scraped URLs before saving.");
+      toast.error("Add files or scraped URLs before saving");
       return;
     }
+    if (!datasetName.trim()) {
+      toast.error("Please enter a dataset name");
+      return;
+    }
+    
+    setIsUploading(true);
     setBusy(true);
-    setMessage(null);
 
-    // 1) Upload files sequentially (safe). Parallel is possible but throttling needed.
+    // Upload files
     for (const f of files) {
       if (f.status === "uploaded") continue;
-      if (f.size > 200 * 1024 * 1024) {
-        setFiles((prev) => prev.map((p) => (p.id === f.id ? { ...p, status: "error", error: "File too large (>200MB)" } : p)));
+      if (f.size > MAX_FILE_SIZE) {
+        setFiles((prev) => prev.map((p) => (p.id === f.id ? { ...p, status: "error", error: "File too large" } : p)));
         continue;
       }
       setFiles((prev) => prev.map((p) => (p.id === f.id ? { ...p, status: "uploading" } : p)));
-      // call backend upload
-      // if backend not reachable, uploadFileToBackend will fail; you can test fallback by setting BASE_URL differently.
       await uploadFileToBackend(f);
     }
 
-    // 2) Send scraped URLs to backend (submit_url) and collect job ids
+    // Process scraped URLs
     for (const s of scraped) {
       if (s.status === "saved" && s.jobId) continue;
       if (s.status === "fetched" || s.status === "pending") {
         try {
-          setScraped((prev) => prev.map((x) => (x.id === s.id ? { ...x, status: "fetched" } : x)));
           const res = await fetch(`${BASE_URL}/submit_url`, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -213,51 +218,52 @@ export default function UploadPage() {
           const data = await res.json();
           setScraped((prev) => prev.map((x) => (x.id === s.id ? { ...x, status: "saved", jobId: data.job_id || null } : x)));
         } catch (err) {
-          // fallback: keep as fetched but mark no jobId
           setScraped((prev) => prev.map((x) => (x.id === s.id ? { ...x, status: "error" } : x)));
         }
       }
     }
 
-    // 3) Build arrays of job ids for dataset creation
-    const file_job_ids = files.filter(f => f.jobId).map(f => f.jobId!) ;
-    const url_job_ids = scraped.filter(s => s.jobId).map(s => s.jobId!) ;
+    // Create dataset
+    const file_job_ids = files.filter(f => f.jobId).map(f => f.jobId!);
+    const url_job_ids = scraped.filter(s => s.jobId).map(s => s.jobId!);
 
-    // 4) Call backend to create dataset record
     try {
-      // Backend should implement POST /datasets accepting jobIds; adapt payload as needed.
       const res = await fetch(`${BASE_URL}/datasets`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: `dataset-${Date.now()}`, // you can add input to rename
+          name: datasetName.trim(),
           file_job_ids,
           url_job_ids,
         }),
       });
+      
       if (!res.ok) {
         const text = await res.text();
-        setMessage(`Dataset creation failed: ${res.status} ${text}`);
+        toast.error(`Dataset creation failed: ${res.status}`);
       } else {
         const data = await res.json();
-        setMessage(`Dataset created: ${data.dataset_id || "ok"}. Go to Train page to index.`);
+        toast.success(`Dataset "${datasetName}" created successfully!`);
+        // Clear form
+        setFiles([]);
+        setScraped([]);
+        setDatasetName("");
       }
     } catch (err) {
-      setMessage("Dataset creation failed (network). Ensure backend /datasets implemented.");
+      toast.error("Failed to create dataset. Check your backend connection.");
     }
 
+    setIsUploading(false);
     setBusy(false);
   }
 
-  // Scrape URL using backend /submit_url (POST form) — returns job_id on success
   async function scrapeUrlHandler(e?: React.FormEvent) {
     if (e) e.preventDefault();
     if (!scrapeUrl.trim()) {
-      setMessage("Enter a URL to scrape.");
+      toast.error("Enter a URL to scrape");
       return;
     }
     setBusy(true);
-    setMessage(null);
 
     try {
       const res = await fetch(`${BASE_URL}/submit_url`, {
@@ -277,12 +283,11 @@ export default function UploadPage() {
       };
       setScraped((s) => [item, ...s]);
       setScrapeUrl("");
-      setMessage("URL scraped and saved.");
+      toast.success("URL scraped successfully");
     } catch (err) {
-      // fallback: create local preview entry and set status to fetched.
       setScraped((s) => [{ id: `s-${Date.now()}`, url: scrapeUrl, title: `Preview: ${scrapeUrl}`, excerpt: "Preview (backend failed)", status: "fetched", jobId: null }, ...s]);
       setScrapeUrl("");
-      setMessage("Scraped locally (demo). Implement backend /submit_url for full behavior.");
+      toast.error("Failed to scrape URL. Check your backend connection.");
     } finally {
       setBusy(false);
     }
@@ -299,49 +304,52 @@ export default function UploadPage() {
 
       <main className="flex-1 overflow-auto ml-0 md:ml-64">
         <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">📤 Upload Data</h1>
-              <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
-                Upload PDFs/DOCX/TXT or paste URLs. Clean data gives better RAG & fine-tune results.
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">📤 Upload Data</h1>
+              <p className="text-gray-600 dark:text-slate-400 mt-2">
+                Upload files or scrape URLs to create your dataset
               </p>
             </div>
 
             <div className="flex items-center gap-3">
-              <Button onClick={() => fileInputRef.current?.click()} variant="ghost">
-                <Upload className="mr-2 h-4 w-4" /> Select files
-              </Button>
-              <Button onClick={saveDataset} className="bg-gradient-to-r from-indigo-600 to-violet-500 text-white" disabled={busy}>
+              <Input 
+                placeholder="Dataset name" 
+                value={datasetName} 
+                onChange={(e) => setDatasetName(e.target.value)}
+                className="w-48"
+              />
+              <Button onClick={saveDataset} disabled={isUploading || (!files.length && !scraped.length)} className="bg-gradient-to-r from-blue-600 to-purple-600">
+                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Save Dataset
               </Button>
             </div>
           </div>
 
           {/* Drag & drop */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Upload className="h-5 w-5" /> Drag & Drop Files
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <Card className="border-2 border-dashed border-gray-300 dark:border-slate-600 hover:border-blue-400 transition-all">
+            <CardContent className="p-0">
               <div
                 ref={dropRef}
                 onDrop={handleDrop}
                 onDragOver={(e) => { e.preventDefault(); handleDragClass(true); }}
                 onDragLeave={() => handleDragClass(false)}
-                className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-indigo-400 transition-colors bg-white dark:bg-slate-800 dark:border-slate-700"
+                className="p-12 text-center cursor-pointer transition-colors"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <input ref={fileInputRef} type="file" multiple className="hidden" onChange={(e) => addFiles(e.target.files)} />
-                <div className="flex items-center justify-center gap-4">
-                  <div className="w-12 h-12 rounded-md bg-gradient-to-br from-indigo-600 to-fuchsia-500 flex items-center justify-center text-white">
-                    <Upload size={20} />
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
+                    <Upload size={24} />
                   </div>
                   <div>
-                    <div className="font-semibold text-slate-900 dark:text-slate-100">Drop files here or click to select</div>
-                    <div className="text-sm text-gray-500 dark:text-slate-400 mt-1">Supported: PDF, DOCX, TXT, MD, CSV. Recommended max 50MB per file.</div>
+                    <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Drop files here or click to browse</h3>
+                    <p className="text-gray-500 dark:text-slate-400 mt-2">PDF, DOCX, TXT, MD, CSV files up to 50MB</p>
                   </div>
+                  <Button variant="outline" className="mt-2">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Choose Files
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -351,13 +359,21 @@ export default function UploadPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Link className="h-5 w-5" /> Scrape from URL
+                <Globe className="h-5 w-5 text-blue-600" /> Scrape from URL
               </CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={scrapeUrlHandler} className="flex gap-3">
-                <Input placeholder="https://example.com/article" value={scrapeUrl} onChange={(e) => setScrapeUrl(e.target.value)} />
-                <Button type="submit" disabled={busy}><Link className="mr-2 h-4 w-4" /> Scrape</Button>
+                <Input 
+                  placeholder="https://example.com/article" 
+                  value={scrapeUrl} 
+                  onChange={(e) => setScrapeUrl(e.target.value)}
+                  className="flex-1"
+                />
+                <Button type="submit" disabled={busy} variant="outline">
+                  {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Globe className="mr-2 h-4 w-4" />}
+                  Scrape
+                </Button>
               </form>
 
               {scraped.length > 0 && (
@@ -391,47 +407,62 @@ export default function UploadPage() {
               ) : (
                 <div className="space-y-3">
                   {files.map((f) => (
-                    <div key={f.id} className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50 dark:hover:bg-slate-700">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-md bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
-                          <CheckCircle />
-                        </div>
-                        <div>
-                          <div className="font-medium text-slate-900 dark:text-slate-100">{f.name}</div>
-                          <div className="text-xs text-gray-500 dark:text-slate-400">{human(f.size)}</div>
-                          {f.jobId && <div className="text-xs text-green-600">job: {f.jobId}</div>}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        {f.status === "uploading" && <div className="text-xs text-gray-500">{f.progress}%</div>}
-                        {f.status === "error" && <div className="text-xs text-rose-600">{f.error || "Error"}</div>}
-                        <button onClick={() => removeFile(f.id)} className="text-rose-600"><Trash2 /></button>
-                      </div>
-
-                      {/* progress bar shown below each item */}
-                      <div className="w-full mt-2">
-                        {f.status === "uploading" && (
-                          <div className="h-1 bg-gray-200 dark:bg-slate-700 rounded overflow-hidden mt-2">
-                            <div style={{ width: `${f.progress}%` }} className="h-1 bg-indigo-600" />
+                    <div key={f.id} className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                            {f.status === "uploaded" ? (
+                              <CheckCircle className="h-5 w-5 text-green-600" />
+                            ) : f.status === "error" ? (
+                              <AlertTriangle className="h-5 w-5 text-red-600" />
+                            ) : (
+                              <FileText className="h-5 w-5 text-blue-600" />
+                            )}
                           </div>
-                        )}
+                          <div>
+                            <div className="font-medium text-slate-900 dark:text-slate-100">{f.name}</div>
+                            <div className="text-sm text-gray-500 dark:text-slate-400">{human(f.size)}</div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          {f.status === "uploading" && (
+                            <div className="flex items-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                              <span className="text-sm text-blue-600">{f.progress}%</span>
+                            </div>
+                          )}
+                          {f.status === "error" && (
+                            <span className="text-sm text-red-600">{f.error}</span>
+                          )}
+                          <Button onClick={() => removeFile(f.id)} variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
+                      
+                      {f.status === "uploading" && (
+                        <div className="mt-3">
+                          <Progress value={f.progress} className="h-2" />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
 
-              <div className="mt-4 flex items-center gap-3">
-                <Button onClick={() => { setFiles([]); setScraped([]); }} variant="outline" disabled={busy}><Trash2 className="mr-2" /> Clear</Button>
-                <div className="text-sm text-gray-500">Tip: Remove irrelevant pages before indexing for better RAG results.</div>
-              </div>
+              {files.length > 0 && (
+                <div className="mt-6 pt-4 border-t flex items-center justify-between">
+                  <div className="text-sm text-gray-500">Total: {files.length} files</div>
+                  <Button onClick={() => { setFiles([]); setScraped([]); }} variant="outline" size="sm" disabled={busy}>
+                    <Trash2 className="mr-2 h-4 w-4" /> Clear All
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {message && (
-            <div className="rounded-md p-3 text-sm bg-amber-50 text-amber-800 border border-amber-100">{message}</div>
-          )}
+
         </div>
       </main>
     </div>
