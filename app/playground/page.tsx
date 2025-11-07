@@ -16,8 +16,8 @@ type Message = {
   loading?: boolean;
 };
 
-const STORAGE_KEY = "fynorra_playground_v1";
-const BASE_URL = "https://c33822360e09.ngrok-free.app";
+const STORAGE_KEY = "fynorra_chat_v1";
+const BASE_URL = "https://fynorra-rag-backend.onrender.com";
 
 export default function PlaygroundPage() {
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -28,18 +28,19 @@ export default function PlaygroundPage() {
       return [];
     }
   });
+
   const [input, setInput] = useState("");
   const [assistantLoading, setAssistantLoading] = useState(false);
-
   const messagesRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-    if (!messagesRef.current) return;
-    messagesRef.current.scrollTo({
-      top: messagesRef.current.scrollHeight,
-      behavior: "smooth",
-    });
+    if (messagesRef.current) {
+      messagesRef.current.scrollTo({
+        top: messagesRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages]);
 
   function addMessage(msg: Message) {
@@ -54,22 +55,37 @@ export default function PlaygroundPage() {
     const text = input.trim();
     if (!text) return;
 
-    const userMsg: Message = { id: `u-${Date.now()}`, role: "user", content: text, ts: Date.now() };
+    const userMsg: Message = {
+      id: `u-${Date.now()}`,
+      role: "user",
+      content: text,
+      ts: Date.now(),
+    };
     addMessage(userMsg);
     setInput("");
     await requestAssistantReply(userMsg);
   }
 
   async function requestAssistantReply(userMsg: Message) {
-    const loadingMsg: Message = { id: `a-${Date.now()}`, role: "assistant", content: "", ts: Date.now(), loading: true };
+    const loadingMsg: Message = {
+      id: `a-${Date.now()}`,
+      role: "assistant",
+      content: "",
+      ts: Date.now(),
+      loading: true,
+    };
     addMessage(loadingMsg);
     setAssistantLoading(true);
 
     try {
-      const res = await fetch(`${BASE_URL}/api/dev/query`, {
+      // 👇 updated endpoint to match your FastAPI /ask
+      const res = await fetch(`${BASE_URL}/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: userMsg.content }),
+        body: JSON.stringify({
+          project: "demo", // or dynamic if project support later
+          question: userMsg.content,
+        }),
       });
 
       if (!res.ok) {
@@ -77,21 +93,29 @@ export default function PlaygroundPage() {
       }
 
       const j = await res.json();
-      let answerText = j.answer || "No response received";
-      let sources: Citation[] = j.sources || [];
+      const answerText = j.answer || "No response received.";
 
+      // replace loading message
       removeMessageById(loadingMsg.id);
       addMessage({
         id: `a-${Date.now()}`,
         role: "assistant",
         content: answerText,
         ts: Date.now(),
-        citations: sources,
+        citations: [],
       });
     } catch (err: any) {
       console.error("requestAssistantReply error", err);
       setMessages((m) =>
-        m.map((x) => (x.id === loadingMsg.id ? { ...x, loading: false, content: `Error: ${err?.message || "Failed to get response."}` } : x))
+        m.map((x) =>
+          x.id === loadingMsg.id
+            ? {
+                ...x,
+                loading: false,
+                content: `Error: ${err?.message || "Failed to get response."}`,
+              }
+            : x
+        )
       );
     } finally {
       setAssistantLoading(false);
@@ -107,13 +131,22 @@ export default function PlaygroundPage() {
           {citations.map((c, i) => (
             <li key={i}>
               {c.url ? (
-                <a href={c.url} target="_blank" rel="noreferrer" className="text-sky-600 hover:underline">
+                <a
+                  href={c.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sky-600 hover:underline"
+                >
                   {c.text || c.snippet || c.id}
                 </a>
               ) : (
                 <span>{c.text || c.snippet || c.id}</span>
               )}
-              {c.page ? <span className="ml-2 text-xs text-gray-400"> (page {c.page})</span> : null}
+              {c.page ? (
+                <span className="ml-2 text-xs text-gray-400">
+                  (page {c.page})
+                </span>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -124,12 +157,17 @@ export default function PlaygroundPage() {
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-slate-900">
       <Sidebar />
-
       <main className="flex-1 overflow-auto ml-0 md:ml-64">
         <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Chat</h1>
-            <Button onClick={() => setMessages([])} variant="outline" size="sm">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              Chat
+            </h1>
+            <Button
+              onClick={() => setMessages([])}
+              variant="outline"
+              size="sm"
+            >
               Clear
             </Button>
           </div>
@@ -138,14 +176,29 @@ export default function PlaygroundPage() {
             <div ref={messagesRef} className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.length === 0 && (
                 <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500 dark:text-slate-400">Start a conversation...</p>
+                  <p className="text-gray-500 dark:text-slate-400">
+                    Start a conversation...
+                  </p>
                 </div>
               )}
 
               {messages.map((m) => (
-                <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[80%] p-3 rounded-2xl ${m.role === "user" ? "bg-blue-600 text-white" : "bg-gray-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"}`}>
-                    <div className="whitespace-pre-wrap">{m.loading ? "Thinking..." : m.content}</div>
+                <div
+                  key={m.id}
+                  className={`flex ${
+                    m.role === "user" ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`max-w-[80%] p-3 rounded-2xl ${
+                      m.role === "user"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                    }`}
+                  >
+                    <div className="whitespace-pre-wrap">
+                      {m.loading ? "Thinking..." : m.content}
+                    </div>
                     {m.role === "assistant" && renderCitations(m.citations)}
                   </div>
                 </div>
@@ -163,19 +216,21 @@ export default function PlaygroundPage() {
                 </div>
               )}
             </div>
-            
+
             <div className="p-4 border-t dark:border-slate-700">
               <div className="flex gap-3">
                 <Input
                   placeholder="Message..."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && !e.shiftKey && sendMessage()
+                  }
                   className="flex-1 rounded-full"
                   disabled={assistantLoading}
                 />
-                <Button 
-                  onClick={sendMessage} 
+                <Button
+                  onClick={sendMessage}
                   disabled={!input.trim() || assistantLoading}
                   className="rounded-full px-4"
                 >

@@ -6,25 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Upload, Link, Trash2, CheckCircle, AlertTriangle, FileText, Globe, Loader2 } from "lucide-react";
+import { Upload, Globe, Trash2, CheckCircle, AlertTriangle, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
-/**
- * Updated Upload Page (Next.js + .tsx)
- * - Uploads files to backend /upload_pdf with XHR (progress)
- * - Scrapes URLs via backend /submit_url
- * - Save Dataset: calls backend /datasets with uploaded job_ids + scraped job_ids
- *
- * Environment:
- *   NEXT_PUBLIC_API_BASE  (e.g. http://localhost:8000)
- *
- * Backend endpoints expected:
- *  POST /upload_pdf   -> returns { job_id, path?, ... }
- *  POST /submit_url   -> returns { job_id, source: url, ... }
- *  POST /datasets     -> expects { name, file_job_ids:[], url_job_ids:[] } -> returns { dataset_id }
- *
- * If backend differs, adjust BASE_URL or endpoint paths below.
- */
 
 type UploadFile = {
   id: string;
@@ -32,10 +15,9 @@ type UploadFile = {
   name: string;
   size: number;
   type: string;
-  progress: number; // 0-100
+  progress: number;
   status: "pending" | "uploading" | "uploaded" | "error";
   error?: string;
-  // backend job id after successful upload
   jobId?: string | null;
 };
 
@@ -45,11 +27,11 @@ type ScrapedItem = {
   title?: string;
   excerpt?: string;
   status: "pending" | "fetched" | "saved" | "error";
-  jobId?: string | null; // backend returned job id
+  jobId?: string | null;
 };
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
-const BASE_URL = "https://c33822360e09.ngrok-free.app";
+const BASE_URL = "https://fynorra-rag-backend.onrender.com";
 
 export default function UploadPage() {
   const [files, setFiles] = useState<UploadFile[]>([]);
@@ -77,7 +59,6 @@ export default function UploadPage() {
     };
   }, []);
 
-  // Helpers
   const human = (n: number) => {
     if (n < 1024) return `${n} B`;
     if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
@@ -88,7 +69,6 @@ export default function UploadPage() {
     if (!list) return;
     const arr = Array.from(list).map((f) => {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      const status = f.size > MAX_FILE_SIZE ? "pending" : "pending";
       return {
         id,
         file: f,
@@ -96,7 +76,7 @@ export default function UploadPage() {
         size: f.size,
         type: f.type || "application/octet-stream",
         progress: 0,
-        status,
+        status: "pending",
         jobId: null,
       } as UploadFile;
     });
@@ -109,7 +89,6 @@ export default function UploadPage() {
     setFiles((s) => [...arr, ...s]);
   }
 
-  // Drop handler
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     handleDragClass(false);
@@ -122,7 +101,6 @@ export default function UploadPage() {
     dropRef.current.style.background = active ? "rgba(99,102,241,0.03)" : "";
   }
 
-  // Remove file
   function removeFile(id: string) {
     setFiles((s) => s.filter((f) => f.id !== id));
   }
@@ -131,24 +109,24 @@ export default function UploadPage() {
     return new Promise<UploadFile>((resolve) => {
       const form = new FormData();
       form.append("file", fileItem.file);
+      form.append("project", "demo");
+      form.append("user_id", "guest");
+
       const xhr = new XMLHttpRequest();
-      xhr.open("POST", `${BASE_URL}/api/dev/upload`);
-      // TODO: Add Supabase JWT token when auth is implemented
-      // xhr.setRequestHeader('Authorization', `Bearer ${supabaseToken}`);
-      
+      xhr.open("POST", `${BASE_URL}/upload`);
+
       xhr.upload.onprogress = (ev) => {
         if (ev.lengthComputable) {
           const pct = Math.round((ev.loaded / ev.total) * 100);
           setFiles((prev) => prev.map((p) => (p.id === fileItem.id ? { ...p, progress: pct } : p)));
         }
       };
-      
+
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const body = JSON.parse(xhr.responseText || "{}");
             const jobId = body.jobId || body.documentId || null;
-            // Backend returns: { jobId: "job_123", documentId: "doc_456", status: "queued" }
             setFiles((prev) =>
               prev.map((p) => (p.id === fileItem.id ? { ...p, status: "uploaded", progress: 100, jobId } : p))
             );
@@ -169,7 +147,7 @@ export default function UploadPage() {
           resolve({ ...fileItem, status: "error", error });
         }
       };
-      
+
       xhr.onerror = () => {
         const error = "Network error";
         setFiles((prev) =>
@@ -178,7 +156,7 @@ export default function UploadPage() {
         toast.error(`Network error uploading ${fileItem.name}`);
         resolve({ ...fileItem, status: "error", error });
       };
-      
+
       xhr.send(form);
     });
   }
@@ -188,12 +166,9 @@ export default function UploadPage() {
       toast.error("Add files or scraped URLs before saving");
       return;
     }
-    // Dataset name not required as backend auto-processes files
-    
     setIsUploading(true);
     setBusy(true);
 
-    // Upload files
     for (const f of files) {
       if (f.status === "uploaded") continue;
       if (f.size > MAX_FILE_SIZE) {
@@ -204,12 +179,11 @@ export default function UploadPage() {
       await uploadFileToBackend(f);
     }
 
-    // Process scraped URLs
     for (const s of scraped) {
       if (s.status === "saved" && s.jobId) continue;
       if (s.status === "fetched" || s.status === "pending") {
         try {
-          const res = await fetch(`${BASE_URL}/api/dev/scrape`, {
+          const res = await fetch(`${BASE_URL}/scrape`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ url: s.url }),
@@ -223,25 +197,12 @@ export default function UploadPage() {
       }
     }
 
-    // Create dataset
-    const file_job_ids = files.filter(f => f.jobId).map(f => f.jobId!);
-    const url_job_ids = scraped.filter(s => s.jobId).map(s => s.jobId!);
-
-    try {
-      // Files are auto-processed by backend, no separate dataset creation needed
-      toast.success(`Files uploaded and processing started!`);
-      setFiles([]);
-      setScraped([]);
-      setDatasetName("");
-      setIsUploading(false);
-      setBusy(false);
-      return;
-      
-    } catch (err) {
-      toast.error("Failed to process files. Check your backend connection.");
-      setIsUploading(false);
-      setBusy(false);
-    }
+    toast.success(`Files uploaded and processing started!`);
+    setFiles([]);
+    setScraped([]);
+    setDatasetName("");
+    setIsUploading(false);
+    setBusy(false);
   }
 
   async function scrapeUrlHandler(e?: React.FormEvent) {
@@ -253,7 +214,7 @@ export default function UploadPage() {
     setBusy(true);
 
     try {
-      const res = await fetch(`${BASE_URL}/api/dev/scrape`, {
+      const res = await fetch(`${BASE_URL}/scrape`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: scrapeUrl.trim() }),
@@ -278,7 +239,6 @@ export default function UploadPage() {
     }
   }
 
-  // Remove scraped item
   function removeScraped(id: string) {
     setScraped((s) => s.filter((x) => x.id !== id));
   }
@@ -298,9 +258,9 @@ export default function UploadPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Input 
-                placeholder="Dataset name" 
-                value={datasetName} 
+              <Input
+                placeholder="Dataset name"
+                value={datasetName}
                 onChange={(e) => setDatasetName(e.target.value)}
                 className="w-48"
               />
@@ -311,7 +271,6 @@ export default function UploadPage() {
             </div>
           </div>
 
-          {/* Drag & drop */}
           <Card className="border-2 border-dashed border-gray-300 dark:border-slate-600 hover:border-blue-400 transition-all">
             <CardContent className="p-0">
               <div
@@ -340,7 +299,6 @@ export default function UploadPage() {
             </CardContent>
           </Card>
 
-          {/* URL scraper */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -349,9 +307,9 @@ export default function UploadPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={scrapeUrlHandler} className="flex gap-3">
-                <Input 
-                  placeholder="https://example.com/article" 
-                  value={scrapeUrl} 
+                <Input
+                  placeholder="https://example.com/article"
+                  value={scrapeUrl}
                   onChange={(e) => setScrapeUrl(e.target.value)}
                   className="flex-1"
                 />
@@ -381,7 +339,6 @@ export default function UploadPage() {
             </CardContent>
           </Card>
 
-          {/* Files list */}
           <Card>
             <CardHeader>
               <CardTitle>Files in dataset</CardTitle>
@@ -425,7 +382,7 @@ export default function UploadPage() {
                           </Button>
                         </div>
                       </div>
-                      
+
                       {f.status === "uploading" && (
                         <div className="mt-3">
                           <Progress value={f.progress} className="h-2" />
@@ -446,8 +403,6 @@ export default function UploadPage() {
               )}
             </CardContent>
           </Card>
-
-
         </div>
       </main>
     </div>
