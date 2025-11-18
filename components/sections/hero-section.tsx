@@ -189,7 +189,15 @@ function HeroSection() {
             </p>
 
             {/* CTA row */}
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-4 flex-wrap">
+              <a
+                href="/chat-pdf"
+                aria-label="Try PDF Chat Assistant"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-cyan-600 text-white font-medium hover:opacity-95 transition"
+              >
+                📄 PDF Chat
+              </a>
               <a
                 href="/demo"
                 aria-label="Try Fynorra live demo"
