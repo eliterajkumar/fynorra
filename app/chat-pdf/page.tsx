@@ -83,13 +83,27 @@ export default function ChatPDFPage() {
     formData.append('files', file);
 
     try {
+      console.log('Uploading PDF:', file.name);
       const response = await fetch('https://303975a3fdd8.ngrok-free.app/rag/upload-pdfs', {
         method: 'POST',
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: formData
       });
-      return await response.json();
+      
+      console.log('Upload response status:', response.status);
+      const data = await response.json();
+      console.log('Upload response data:', data);
+      
+      if (response.ok) {
+        return data;
+      } else {
+        throw new Error(`Upload failed: ${data.detail || 'Unknown error'}`);
+      }
     } catch (error) {
-      toast.error('Failed to upload PDF');
+      console.error('Upload error:', error);
+      toast.error(`Failed to upload PDF: ${error.message}`);
       return null;
     }
   };
@@ -110,26 +124,46 @@ export default function ChatPDFPage() {
     setIsLoading(true);
 
     try {
+      console.log('Sending message:', currentMessage);
       const response = await fetch('https://303975a3fdd8.ngrok-free.app/rag/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify({
           message: currentMessage,
-          session_id: 'user_' + Date.now()
+          session_id: 'user_session_1'
         })
       });
 
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
       
-      const aiMessage: Message = {
+      if (response.ok) {
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: data.response || data.answer || data.message || 'No response received',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      } else {
+        throw new Error(`HTTP ${response.status}: ${data.detail || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      toast.error(`Error: ${error.message || 'Failed to connect to AI service'}`);
+      
+      // Add error message to chat
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: data.response || data.answer || data.message,
+        content: `Sorry, I encountered an error: ${error.message}. Please try again.`,
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
-      toast.error('Error connecting to AI service');
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
