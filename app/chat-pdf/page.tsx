@@ -84,7 +84,7 @@ export default function ChatPDFPage() {
 
     try {
       console.log('Uploading PDF:', file.name);
-      const response = await fetch('https://a2565a3716c3.ngrok-free.app/rag/upload-pdfs', {
+      const response = await fetch('https://fynorra-rag-backend.onrender.com/rag/upload-pdfs', {
         method: 'POST',
         headers: {
           'ngrok-skip-browser-warning': 'true'
@@ -125,7 +125,7 @@ export default function ChatPDFPage() {
 
     try {
       console.log('Sending message:', currentMessage);
-      const response = await fetch('https://a2565a3716c3.ngrok-free.app/rag/chat', {
+      const response = await fetch('https://fynorra-rag-backend.onrender.com/rag/chat', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
