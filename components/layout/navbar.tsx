@@ -86,10 +86,10 @@ export function Navbar() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Link href="/chat-pdf" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>PDF Chat</Link>
+      {/* <Link href="/chat-pdf" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>PDF Chat</Link> */}
       <Link href="/for-businesses" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>For Businesses</Link>
       <Link href="/about-us" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>About Us</Link>
-      <Link href="/services" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>Services</Link>
+      {/* <Link href="/services" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>Services</Link> */}
       <Link href="/contact" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>Contact</Link>
       <Link href="/dashboard" className={isMobile ? mobileNavLinkClass : navLinkClass} onClick={() => isMobile && setMobileMenuOpen(false)}>A6-Platform</Link>
     </>
