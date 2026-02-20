@@ -4,6 +4,7 @@ import React, { useEffect, useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+/* ---------- Decorative Shape ---------- */
 type ElegantShapeProps = {
   className?: string;
   delay?: number;
@@ -24,9 +25,9 @@ const ElegantShape = React.memo(function ElegantShape({
   return (
     <motion.div
       initial={{ opacity: 0, y: -120, rotate: rotate - 12 }}
-      animate={{ opacity: 1, y: 0, rotate: rotate }}
+      animate={{ opacity: 1, y: 0, rotate }}
       transition={{ duration: 1.8, delay, ease: [0.23, 0.86, 0.39, 0.96] }}
-      className={cn("absolute pointer-events-none will-change-transform", className)}
+      className={cn("absolute pointer-events-none", className)}
       aria-hidden
     >
       <motion.div
@@ -37,12 +38,9 @@ const ElegantShape = React.memo(function ElegantShape({
       >
         <div
           className={cn(
-            "absolute inset-0 rounded-full",
-            "bg-gradient-to-r to-transparent",
+            "absolute inset-0 rounded-full bg-gradient-to-r to-transparent",
             gradient,
-            "backdrop-blur-[2px] border border-white/[0.06]",
-            "shadow-[0_12px_40px_0_rgba(255,255,255,0.04)]",
-            "after:absolute after:inset-0 after:rounded-full after:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.06),transparent_70%)]"
+            "backdrop-blur-[2px] border border-white/[0.06]"
           )}
         />
       </motion.div>
@@ -50,6 +48,7 @@ const ElegantShape = React.memo(function ElegantShape({
   );
 });
 
+/* ---------- Hero Section ---------- */
 function HeroSection() {
   const reduceMotion = useReducedMotion();
 
@@ -59,171 +58,157 @@ function HeroSection() {
       visible: (i: number) => ({
         opacity: 1,
         y: 0,
-        transition: { duration: 0.9, delay: 0.4 + i * 0.16, ease: [0.25, 0.4, 0.25, 1] },
+        transition: {
+          duration: 0.9,
+          delay: 0.4 + i * 0.15,
+          ease: [0.25, 0.4, 0.25, 1],
+        },
       }),
     }),
     []
   );
 
-  // JSON-LD: Organization + WebSite
-  // NOTE: best practice = add this JSON-LD server-side in <Head> for immediate indexability.
+  /* ---------- BRAND + SERVICE JSON-LD ---------- */
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Organization",
         "name": "Fynorra AI Solutions Pvt Ltd",
-        "url": "https://www.fynorra.com",
-        "logo": "https://www.fynorra.com/logo.png",
-        "sameAs": [
-          "https://www.linkedin.com/company/fynorra-ai",
-          "https://twitter.com/fynorra",
-          "https://www.facebook.com/fynorra"
+        "alternateName": [
+          "Fynorra",
+          "Fynorra AI",
+          "Fynorra AI Solutions",
+          "Finorra",
+          "Fynora"
         ],
+        "url": "https://www.fynorra.com",
+        "areaServed": "India",
         "contactPoint": [
           {
             "@type": "ContactPoint",
+            "telephone": "+91-9521297788",
+            "contactType": "WhatsApp Sales"
+          },
+          {
+            "@type": "ContactPoint",
             "telephone": "+91-9352922959",
-            "contactType": "sales",
-            "areaServed": ["IN", "US"]
+            "contactType": "Call Sales"
           }
         ]
       },
       {
-        "@type": "WebSite",
-        "url": "https://www.fynorra.com",
-        "name": "Fynorra",
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": "https://www.fynorra.com/search?q={search_term_string}",
-          "query-input": "required name=search_term_string"
-        }
+        "@type": "Service",
+        "name": "WhatsApp AI Agent for Indian Businesses",
+        "serviceType": [
+          "WhatsApp AI Agent",
+          "AI Sales Automation",
+          "AI Lead Capture"
+        ],
+        "areaServed": "India"
       }
     ]
   };
 
   useEffect(() => {
-    // Insert JSON-LD client-side as fallback (server placement is recommended).
     const id = "fynorra-jsonld-hero";
     if (!document.getElementById(id)) {
-      const s = document.createElement("script");
-      s.type = "application/ld+json";
-      s.id = id;
-      s.text = JSON.stringify(jsonLd);
-      document.head.appendChild(s);
+      const script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.id = id;
+      script.text = JSON.stringify(jsonLd);
+      document.head.appendChild(script);
     }
   }, []);
 
   return (
     <section
-      role="region"
-      aria-label="Hero — Fynorra: AI-first web & automation"
+      aria-label="Fynorra AI Solutions – WhatsApp AI Agents for Indian Businesses"
       className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#030303]"
     >
-      {/* decorative gradient backdrop */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.04] via-transparent to-rose-500/[0.04] blur-3xl pointer-events-none" />
+      {/* Background glow */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.04] via-transparent to-rose-500/[0.04] blur-3xl" />
 
-      {/* decorative shapes */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
-        {!reduceMotion && (
-          <>
-            <ElegantShape
-              delay={0.28}
-              width={600}
-              height={140}
-              rotate={12}
-              gradient="from-indigo-500/[0.12]"
-              className="left-[-12%] md:left-[-6%] top-[12%] md:top-[18%]"
-            />
-            <ElegantShape
-              delay={0.5}
-              width={500}
-              height={120}
-              rotate={-15}
-              gradient="from-rose-500/[0.12]"
-              className="right-[-6%] md:right-[0%] top-[68%] md:top-[74%]"
-            />
-            <ElegantShape
-              delay={0.42}
-              width={300}
-              height={80}
-              rotate={-8}
-              gradient="from-violet-500/[0.12]"
-              className="left-[5%] md:left-[10%] bottom-[6%] md:bottom-[10%]"
-            />
-          </>
-        )}
+      {/* Floating shapes */}
+      {!reduceMotion && (
+        <>
+          <ElegantShape
+            delay={0.3}
+            width={600}
+            height={140}
+            rotate={12}
+            gradient="from-indigo-500/[0.12]"
+            className="left-[-10%] top-[15%]"
+          />
+          <ElegantShape
+            delay={0.5}
+            width={480}
+            height={120}
+            rotate={-14}
+            gradient="from-rose-500/[0.12]"
+            className="right-[-5%] top-[70%]"
+          />
+        </>
+      )}
+
+      {/* Content */}
+      <div className="relative z-10 max-w-3xl mx-auto text-center px-6">
+        <motion.div custom={1} variants={fadeUpVariants} initial="hidden" animate="visible">
+          <h1 className="font-bold tracking-tight mb-6">
+            <span className="block text-transparent bg-clip-text bg-gradient-to-b from-white to-white/90 text-[clamp(2.2rem,6vw,4rem)]">
+              Fynorra AI Solutions
+            </span>
+            <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-white to-pink-400 text-[clamp(1.1rem,3vw,1.2rem)]">
+              WhatsApp AI Agents & Automation for Indian Businesses
+            </span>
+          </h1>
+        </motion.div>
+
+        <motion.div custom={2} variants={fadeUpVariants} initial="hidden" animate="visible">
+          <p className="text-white/65 text-lg leading-relaxed mb-8 max-w-2xl mx-auto">
+            Fynorra builds WhatsApp AI Agents for Indian MSMEs.
+            Our AI chats like a human salesman, captures leads,
+            qualifies customers, stores data in Google Sheets,
+            and works 24/7 — perfect for showrooms, clothing brands,
+            interior designers, and local businesses.
+          </p>
+
+          {/* CTA Buttons */}
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            {/* Direct WhatsApp Redirect */}
+            <a
+              href="https://wa.me/919521297788?text=Hi%20Fynorra%2C%20I%20want%20to%20know%20more%20about%20your%20WhatsApp%20AI%20Agent%20for%20my%20business."
+              aria-label="Chat on WhatsApp with Fynorra"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-green-600 text-white font-medium hover:bg-green-500 transition"
+            >
+              📲 Chat on WhatsApp
+            </a>
+
+            {/* Call Button */}
+            <a
+              href="tel:+919352922959"
+              aria-label="Call Fynorra sales team"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-white/[0.08] text-white hover:bg-white/[0.04] transition"
+            >
+              📞 Call Now
+            </a>
+          </div>
+
+          <p className="text-xs text-white/40 mt-4">
+            Trusted by Indian MSMEs • Showrooms • Clothing & Interior Businesses
+          </p>
+
+          {/* Hidden brand + typo keywords */}
+          <p className="sr-only">
+            Fynorra, Finorra, Fynora,
+            Fynorra AI, Fynorra AI Solutions,
+            Fynorra WhatsApp AI Agent,
+            Fynorra AI Automation Company India
+          </p>
+        </motion.div>
       </div>
 
-      {/* content */}
-      <div className="relative z-10 container mx-auto px-4 md:px-6">
-        <div className="max-w-3xl mx-auto text-center">
-          <motion.div custom={1} variants={fadeUpVariants} initial="hidden" animate="visible">
-            {/* H1: Brand-first, keyword-rich */}
-            <h1 className="font-bold mb-4 md:mb-6 tracking-tight" style={{ lineHeight: 1.02 }}>
-              <span
-                className="block bg-clip-text text-transparent"
-                style={{
-                  backgroundImage: "linear-gradient(to bottom, #fff, rgba(255,255,255,0.9))",
-                  fontSize: "clamp(2.2rem, 6.5vw, 4.2rem)",
-                }}
-              >
-                Fynorra — AI Assistants for Growing Businesses
-              </span>
-              <span
-                className="block bg-clip-text text-transparent mt-2"
-                style={{
-                  backgroundImage: "linear-gradient(90deg,#38bdf8 0%, #fff 45%, #f472b6 100%)",
-                  fontSize: "clamp(1.1rem, 3.2vw, 1.2rem)",
-                }}
-              >
-                Custom AI Chatbots • Automation • Scalable Software
-              </span>
-            </h1>
-          </motion.div>
-
-          <motion.div custom={2} variants={fadeUpVariants} initial="hidden" animate="visible">
-            <p className="text-base sm:text-lg md:text-xl text-white/60 mb-8 leading-relaxed font-light tracking-wide max-w-2xl mx-auto px-4">
-              Fynorra builds production-ready AI assistants, integrations, and automation that cut costs and improve conversions.
-              From hotel booking assistants to real-estate lead qualification and SaaS onboarding — we deliver reliable, secure, and scalable solutions.
-            </p>
-
-            {/* CTA row */}
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <a
-                href="/chat-pdf"
-                aria-label="Try PDF Chat Assistant"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-cyan-600 text-white font-medium hover:opacity-95 transition"
-              >
-                📄 PDF Chat
-              </a>
-              <a
-                href="/demo"
-                aria-label="Try Fynorra live demo"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-sky-600 text-white font-medium hover:opacity-95 transition"
-              >
-                Try Live Demo
-              </a>
-              <a
-                href="/contact"
-                aria-label="Get a quote from Fynorra"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-white/[0.06] text-white/90 hover:bg-white/[0.02] transition"
-              >
-                Get Quote
-              </a>
-            </div>
-
-            <p className="text-xs text-white/40 mt-4">
-              Serving India & USA • SOC2 & GDPR ready • Trusted by enterprise teams.
-            </p>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* bottom overlay */}
+      {/* Bottom fade */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-[#030303]/80 pointer-events-none" />
     </section>
   );
