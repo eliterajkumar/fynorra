@@ -1,213 +1,184 @@
-
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowRight, Briefcase, Target, Building, MessageSquareQuote, CheckCircle, Zap } from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import { db } from "@/lib/firebase";
-import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Briefcase,
+  Building,
+  CheckCircle,
+  Zap,
+  MessageSquareQuote,
+} from "lucide-react";
 
-interface CaseStudy {
-  id: string;
-  title: string;
-  overview: string;
-  results: string[];
-  client: string;
-  imageUrl?: string;
-  slug: string; // Changed from optional to required for linking
-  dataAiHint?: string;
-}
+const caseStudies = [
+  {
+    client: "VI Tech Windows",
+    location: "Delhi",
+    industry: "UPVC & Aluminium Doors and Windows",
+    title: "WhatsApp AI Order Management for Manufacturing Business",
+    problem:
+      "Orders were coming on WhatsApp but tracking, updating, and production assignment was manual and confusing.",
+    solution: [
+      "WhatsApp AI Order Creation & Update",
+      "Automatic Google Drive folder creation",
+      "Order folder link saved in Google Sheets",
+      "Order assignment to production team",
+      "Order status view directly on WhatsApp",
+    ],
+    results: [
+      "Complete order management on WhatsApp",
+      "Zero manual confusion",
+      "No WhatsApp API required",
+      "Used existing WhatsApp number",
+    ],
+  },
+  {
+    client: "Ideal Modular Kitchen",
+    location: "Sultanpur, New Delhi",
+    industry: "Interior & Modular Kitchen",
+    title: "WhatsApp AI Sales Agent for Interior Business",
+    problem:
+      "Inquiries were unqualified, pricing was shared without customer details, and follow-ups were missed.",
+    solution: [
+      "Phone number capture before conversation",
+      "Human-like sales conversation",
+      "Product images & details sharing",
+      "Interest tracking in Google Sheets",
+      "Price calculation after customer details",
+      "Callback time scheduling",
+    ],
+    results: [
+      "Better quality leads",
+      "Higher inquiry to sale conversion",
+      "Sales team time saved",
+      "Organized follow-ups",
+    ],
+  },
+  {
+    client: "WAAK Shop",
+    location: "India",
+    industry: "Clothing Brand",
+    title: "WhatsApp AI Lead Capture & CRM for Clothing Store",
+    problem:
+      "Customer data was getting lost and no system existed for future campaigns.",
+    solution: [
+      "AI chat with WhatsApp customers",
+      "Interest detection",
+      "Phone number capture",
+      "Google Sheet CRM creation",
+      "Ignore WhatsApp groups & automation messages",
+      "Ignore own number messages",
+    ],
+    results: [
+      "Clean customer database",
+      "Ready audience for future offers",
+      "Zero spam replies",
+      "Better campaign planning",
+    ],
+  },
+];
 
-async function getCaseStudies(): Promise<CaseStudy[]> {
-  try {
-    const csCollection = collection(db, "caseStudies");
-    const q = query(csCollection, orderBy("client", "asc")); 
-    const csSnapshot = await getDocs(q);
-    const csList = csSnapshot.docs.map(doc => {
-        const data = doc.data();
-        return { 
-            id: doc.id,
-            title: data.title || "Untitled Case Study",
-            overview: data.overview || "No overview available.",
-            results: data.results || [],
-            client: data.client || "Unknown Client",
-            imageUrl: data.imageUrl,
-            slug: data.slug || doc.id, // Fallback to ID if slug is missing
-            dataAiHint: data.dataAiHint,
-         } as CaseStudy;
-    });
-    
-    if (csList.length === 0) {
-      console.warn("No case studies found in Firestore, using sample data.");
-      return getSampleCaseStudies();
-    }
-    return csList;
-  } catch (error) {
-    console.error("Error fetching case studies from Firestore:", error);
-    return getSampleCaseStudies();
-  }
-}
-
-function getSampleCaseStudies(): CaseStudy[] {
-  return [
-    { id: '1', title: 'AI-Powered Automation Boosts Efficiency for FinTech Inc.', overview: 'FinTech Inc. leveraged Fynorra\'s custom AI solutions to automate 80% of their manual data entry tasks, leading to significant operational improvements.', results: ['80% reduction in manual data entry', '45% increase in processing speed', '20% decrease in operational costs'], client: 'FinTech Inc.', imageUrl: '/case1.png', slug: 'fintech-ai-automation', dataAiHint: 'finance technology' },
-    { id: '2', title: 'E-commerce Giant Achieves 30% Sales Growth with Personalized Chatbots', overview: 'A leading e-commerce platform integrated Fynorra\'s AI chatbots, resulting in enhanced customer engagement and a substantial uplift in sales.', results: ['30% increase in online sales', '24/7 customer support availability', 'Improved customer satisfaction scores by 40%'], client: 'GlobalCart Marketplace', imageUrl: '/ecom1.png', slug: 'ecommerce-chatbot-growth', dataAiHint: 'online shopping' },
-    { id: '3', title: 'Healthcare Provider Enhances Patient Care with Predictive Analytics', overview: 'Fynorra developed a predictive analytics model that helped a major healthcare provider anticipate patient needs and optimize resource allocation.', results: ['15% improvement in patient outcome predictions', 'Optimized staff scheduling', 'Reduced wait times by 25%'], client: 'HealthCare Solutions Group', imageUrl: '/health.png', slug: 'healthcare-predictive-care', dataAiHint: 'medical data' },
-  ];
-}
-
-const staticTestimonial = {
-  quote: "Fynorra’s AI solutions transformed our operations – we couldn’t be happier! Their team delivered beyond our expectations, providing innovative tools that gave us a real competitive edge.",
-  author: "Jane Doe, CEO",
-  company: "XYZ Corp."
-};
-
-export default async function CaseStudiesPage() {
-  const allCaseStudies = await getCaseStudies();
-  const featuredStudy = allCaseStudies.length > 0 ? allCaseStudies[0] : null;
-  const moreStudies = allCaseStudies.length > 1 ? allCaseStudies.slice(1) : (allCaseStudies.length === 1 && !featuredStudy ? allCaseStudies : []);
-
+export default function CaseStudiesPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#1e1e2f] to-[#2a2a4e] text-slate-50">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#0f172a] to-[#020617] text-slate-50">
       <Navbar />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+
+      <main className="flex-grow container mx-auto px-4 py-16">
         {/* Header */}
-        <header className="text-center mb-16 pt-12">
-          <Briefcase className="mx-auto h-16 w-16 text-primary mb-4" />
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4">
-            Case Studies: Real Impact with Fynorra Solutions
+        <header className="text-center mb-16">
+          <Briefcase className="mx-auto h-14 w-14 text-primary mb-4" />
+          <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">
+            Real WhatsApp AI Agent Case Studies
           </h1>
-          <p className="text-xl text-slate-300 max-w-3xl mx-auto">
-            See how we’ve helped businesses achieve exponential growth with our cutting-edge AI and software solutions.
+          <p className="text-lg text-slate-300 max-w-3xl mx-auto">
+            Real implementations of WhatsApp AI Agents for Indian businesses —
+            order management, sales automation, lead capture & CRM.
           </p>
         </header>
 
-        {/* Featured Case Study */}
-        {featuredStudy && (
-          <section className="mb-20">
-            <h2 className="text-3xl font-bold mb-8 text-center sm:text-left">Featured Case Study</h2>
-            <Card className="bg-slate-800/50 border-primary/30 shadow-xl overflow-hidden lg:flex lg:flex-row">
-              {featuredStudy.imageUrl && (
-                <div className="lg:w-2/5">
-                  <Image
-                    src={featuredStudy.imageUrl}
-                    alt={featuredStudy.title}
-                    width={800}
-                    height={450}
-                    className="w-full h-64 lg:h-full object-cover"
-                    data-ai-hint={featuredStudy.dataAiHint || "business success"}
-                  />
-                </div>
-              )}
-              <div className={`p-6 md:p-10 flex flex-col justify-center ${featuredStudy.imageUrl ? 'lg:w-3/5' : 'w-full'}`}>
-                <CardHeader className="p-0 mb-4">
-                  <p className="text-sm text-primary font-semibold mb-1 uppercase tracking-wider flex items-center">
-                    <Building className="h-4 w-4 mr-2" /> Client: {featuredStudy.client}
-                  </p>
-                  <CardTitle className="text-3xl font-semibold mb-2">{featuredStudy.title}</CardTitle>
-                </CardHeader>
-                <CardDescription className="text-slate-300 mb-6 text-base leading-relaxed line-clamp-3">
-                  {featuredStudy.overview}
-                </CardDescription>
-                <div className="mb-6">
-                  <h4 className="text-lg font-semibold text-primary mb-2 flex items-center">
-                    <Target className="h-5 w-5 mr-2" /> Key Results:
-                  </h4>
-                  <ul className="space-y-2 text-slate-200">
-                    {featuredStudy.results.map((result, index) => (
-                      <li key={index} className="flex items-start">
-                        <CheckCircle className="h-5 w-5 mr-2 mt-0.5 text-green-400 shrink-0" />
-                        <span>{result}</span>
+        {/* Case Studies */}
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-20">
+          {caseStudies.map((cs, index) => (
+            <Card
+              key={index}
+              className="bg-slate-900/60 border-slate-700/60 shadow-xl flex flex-col"
+            >
+              <CardHeader>
+                <p className="text-sm text-primary font-medium flex items-center mb-1">
+                  <Building className="h-4 w-4 mr-2" />
+                  {cs.client} — {cs.location}
+                </p>
+                <CardTitle className="text-xl">{cs.title}</CardTitle>
+                <p className="text-xs text-slate-400 mt-1">
+                  {cs.industry}
+                </p>
+              </CardHeader>
+
+              <CardContent className="flex-grow">
+                <p className="text-slate-300 mb-4">
+                  <strong>Problem:</strong> {cs.problem}
+                </p>
+
+                <div className="mb-4">
+                  <p className="font-semibold mb-2">Solution:</p>
+                  <ul className="space-y-1 text-sm text-slate-300">
+                    {cs.solution.map((item, i) => (
+                      <li key={i} className="flex items-start">
+                        <CheckCircle className="h-4 w-4 text-green-400 mr-2 mt-0.5" />
+                        {item}
                       </li>
                     ))}
                   </ul>
                 </div>
-                <Link href={`/case-studies/${featuredStudy.slug}`} className="mt-auto">
-                  <Button size="lg" className="group w-full sm:w-auto">
-                    Read Full Case Study <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
-              </div>
+
+                <div>
+                  <p className="font-semibold mb-2">Results:</p>
+                  <ul className="space-y-1 text-sm text-slate-300">
+                    {cs.results.map((res, i) => (
+                      <li key={i} className="flex items-start">
+                        <CheckCircle className="h-4 w-4 text-cyan-400 mr-2 mt-0.5" />
+                        {res}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </CardContent>
             </Card>
-          </section>
-        )}
-
-        {/* More Case Studies */}
-        {moreStudies.length > 0 && (
-          <section className="mb-20">
-            <h2 className="text-3xl font-bold mb-10 text-center sm:text-left">More Case Studies</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              {moreStudies.map((study) => (
-                <Card key={study.id} className="bg-slate-800/50 border-slate-700/50 shadow-lg hover:shadow-primary/20 transition-shadow duration-300 flex flex-col">
-                  {study.imageUrl && (
-                    <Image
-                      src={study.imageUrl}
-                      alt={study.title}
-                      width={600}
-                      height={338} // 16:9 aspect ratio
-                      className="w-full h-56 object-cover rounded-t-lg"
-                      data-ai-hint={study.dataAiHint || "corporate solution"}
-                    />
-                  )}
-                  <CardHeader className="pb-3">
-                    <p className="text-xs text-primary font-medium mb-1 uppercase tracking-wide flex items-center">
-                      <Building className="h-3.5 w-3.5 mr-1.5" /> {study.client}
-                    </p>
-                    <CardTitle className="text-xl font-semibold">{study.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <p className="text-slate-300 text-sm leading-relaxed line-clamp-4">{study.overview}</p>
-                  </CardContent>
-                  <div className="p-6 pt-2 mt-auto">
-                    <Link href={`/case-studies/${study.slug}`}>
-                      <Button variant="outline" className="w-full group text-sm border-primary/50 hover:bg-primary/10 hover:text-primary">
-                        Learn More <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                      </Button>
-                    </Link>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </section>
-        )}
-         {moreStudies.length === 0 && !featuredStudy && (
-            <p className="text-slate-400 text-center py-10 text-lg">No case studies available at the moment. Please check back soon!</p>
-        )}
-
-
-        {/* Testimonials Section */}
-        <section className="mb-20 py-12 bg-slate-800/30 rounded-xl shadow-lg">
-          <div className="container mx-auto px-4 text-center">
-            <MessageSquareQuote className="mx-auto h-12 w-12 text-primary mb-6" />
-            <h2 className="text-3xl font-bold mb-6">What Our Clients Say</h2>
-            <blockquote className="max-w-3xl mx-auto">
-              <p className="text-2xl italic text-slate-200 leading-relaxed">
-                "{staticTestimonial.quote}"
-              </p>
-              <footer className="mt-6">
-                <p className="text-lg font-semibold text-primary">{staticTestimonial.author}</p>
-                <p className="text-md text-slate-400">{staticTestimonial.company}</p>
-              </footer>
-            </blockquote>
-          </div>
+          ))}
         </section>
 
-        {/* Call to Action Section */}
-        <section className="text-center py-12 bg-primary/10 rounded-xl shadow-lg">
-          <Zap className="mx-auto h-12 w-12 text-primary mb-4" />
-          <h2 className="text-3xl font-bold mb-4">Ready to Transform Your Business?</h2>
-          <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-8">
-            Contact us today to explore how Fynorra's innovative solutions can help your business achieve its full potential.
+        {/* Testimonial */}
+        <section className="mb-20 text-center bg-slate-900/40 rounded-xl py-12 px-6">
+          <MessageSquareQuote className="mx-auto h-10 w-10 text-primary mb-4" />
+          <p className="text-xl italic text-slate-200 max-w-3xl mx-auto">
+            “WhatsApp par orders manage karna pehle mushkil tha.
+            Fynorra ke AI agent ne poora order system automate kar diya.”
           </p>
-          <Link href="/contact">
-            <Button size="lg" className="group text-lg px-8 py-3">
-              Contact Us <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+          <p className="mt-4 text-primary font-semibold">
+            — Owner, VI Tech Windows (Delhi)
+          </p>
+        </section>
+
+        {/* CTA */}
+        <section className="text-center py-14 bg-primary/10 rounded-xl">
+          <Zap className="mx-auto h-12 w-12 text-primary mb-4" />
+          <h2 className="text-3xl font-bold mb-4">
+            Want This WhatsApp AI Agent for Your Business?
+          </h2>
+          <p className="text-slate-300 max-w-2xl mx-auto mb-8">
+            Get your own WhatsApp AI Agent for sales, orders, lead capture,
+            and automation — without WhatsApp API.
+          </p>
+          <a
+            href="https://wa.me/919521297788?text=Hi%20Fynorra%2C%20I%20saw%20your%20WhatsApp%20AI%20case%20studies%20and%20want%20this%20for%20my%20business."
+          >
+            <Button size="lg" className="text-lg px-8 py-3">
+              📲 Get WhatsApp AI Agent Demo
             </Button>
-          </Link>
+          </a>
         </section>
       </main>
+
       <Footer />
     </div>
   );
