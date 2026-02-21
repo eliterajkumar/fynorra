@@ -166,11 +166,11 @@ export function ServicesSection() {
 
                   <div className="mt-4">
                     <Link href={service.link} passHref>
-                      <a
+                      
                         aria-label={`Learn more about ${service.title} by Fynorra`}
                         rel="noopener noreferrer"
                         className="w-full inline-block"
-                      >
+                      
                         <Button
                           variant="outline"
                           className="w-full group text-sm border-primary/50 hover:bg-primary/10 hover:text-primary flex items-center justify-center gap-2"
@@ -178,7 +178,7 @@ export function ServicesSection() {
                           Learn More
                           <ArrowRight className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
                         </Button>
-                      </a>
+                      
                     </Link>
                   </div>
                 </CardContent>
